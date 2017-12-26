@@ -1,0 +1,30 @@
+kind: ConfigMap
+metadata:
+  name: lustre-ha-config
+  namespace: lustre
+apiVersion: v1
+data:
+  configuration: |
+    {
+      "lustre-1": {
+        "lustre": {
+          "comment": "<cluster>-<role>-<id>",
+          "mgsnode": "m1c4",
+          "fsname": "lustre-1",
+          "device": "/dev/drbd0"
+        },
+        "drbd": {
+          "device": "/dev/drbd0",
+          "disks": ["/dev/sdb", "/dev/sdb"]
+        }
+      }
+    }
+  daemons: |
+    {
+      "lustre-1": {
+         "mgt": ["m1c4", "m2c4"],
+         "mdt0": ["m1c5", "m2c5"],
+         "ost0": ["m1c6", "m2c6"],
+         "ost1": ["m1c7", "m2c7"]
+      }
+    }
