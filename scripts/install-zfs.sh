@@ -156,6 +156,7 @@ elif [ "$MODE" == "from-source" ]; then
 fi
 
 if [ "$TYPE" == "dkms" ]; then
+    VERSION="$(rpm -qa zfs-dkms | awk -F- '{print $3}')"
     # build dkms module
     if ! (dkms install "spl/$VERSION" && dkms install "zfs/$VERSION"); then
          >&2 echo "Error: Can not build zfs dkms module"
