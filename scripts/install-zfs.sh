@@ -22,11 +22,11 @@ fi
 
 rpm -q --quiet epel-release || yum -y install epel-release
 
-
+# initial checks
 if [ "$MODE" == "from-repo" ]; then
 
+    # install repositories at this time
     rpm -q zfs-release || yum -y install --nogpgcheck http://download.zfsonlinux.org/epel/zfs-release.el7.noarch.rpm
-
     case "$TYPE" in
         kmod) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo ;;
         kmod-testing) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-testing-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo && TYPE=kmod ;;
@@ -53,6 +53,39 @@ else
     exit 1
 fi
 
+# get versions info
+INSTALLED_VERSION="$(rpm -qa zfs | awk -F- '{print $2}')"
+if [ -z "$INSTALLED_VERSION" ] || [ "$AUTO_UPDATE" == "1" ]; then
+    case "$MODE" in
+        from_repo   ) LATEST_VERSION="$(yum list available zfs --showduplicates | grep '\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
+        from_source ) LATEST_VERSION="$(curl https://api.github.com/repos/zfsonlinux/zfs/releases/latest -s | grep tag_name | sed 's/.*"zfs-\(.\+\)",/\1/')" ;;
+    esac
+fi
+VERSION="${VERSION:-$LATEST_VERSION}"
+VERSION="${VERSION:-$INSTALLED_VERSION}"
+
+# check for module
+if ! (find "$CHROOT/lib/modules/$(uname -r)" -name zfs.ko | grep -q "."); then
+    FORCE_REINSTALL=1
+fi
+
+# check for needed packages and version
+if [ -z "$FORCE_REINSTALL" ]; then
+    case "$TYPE" in
+        kmod ) [ "$(rpm -qa zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel | grep -c "$VERSION")" == "5" ] || FORCE_REINSTALL=1 ;;
+        dkms ) [ "$(rpm -qa zfs libzfs2-devel zfs-dkms spl-dkms | grep -c "$VERSION")" == "4" ] || FORCE_REINSTALL=1 ;;
+    esac
+fi
+
+# check for source of installation
+if [ -z "$FORCE_REINSTALL" ]; then
+    case "$MODE" in
+        from-repo   ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' || FORCE_REINSTALL=1 ;;
+        from-source ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' && FORCE_REINSTALL=1 ;;
+    esac
+fi
+
+
 # install kernel-headers
 if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/lib/modules/$(uname -r)/build" ]; then
     if ! yum install "kernel-devel-uname-r == $(uname -r)"; then
@@ -63,40 +96,30 @@ if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/
     fi
 fi
 
+
 # install packages
 if [ "$MODE" == "from-repo" ]; then
 
-    VERSION="$(yum list zfs | tail -n 1 | awk '{print $2}' | cut -d- -f1)"
-
-    case "$TYPE" in
-        kmod )
-            if [ "$AUTO_UPDATE" != "1" ] && rpm -q zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel; then
-                echo "Info: Needed packages already installed"
-            else
+    if [ "$FORCE_REINSTALL" != "1" ]; then
+        echo "Info: Needed packages already installed"
+    else
+        case "$TYPE" in
+            kmod )
                 yum remove -y zfs-dkms spl-dkms
                 cleanup_wrong_versions "$VERSION"
                 yum install -y zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel zfs-dracut
-            fi
-        ;;
-        dkms )
-            if [ "$AUTO_UPDATE" != "1" ] && rpm -q zfs libzfs2-devel zfs-dkms spl-dkms; then
-                echo "Info: Needed packages already installed"
-            else
+            ;;
+            dkms )
                 yum remove -y kmod-zfs kmod-spl kmod-zfs kmod-spl-devel kmod-zfs-devel zfs-dracut
                 cleanup_wrong_versions "$VERSION"
                 yum install -y zfs libzfs2-devel zfs-dkms spl-dkms
-            fi
-        ;;
-    esac
+            ;;
+        esac
+    fi
 
 elif [ "$MODE" == "from-source" ]; then
 
-    case "$TYPE" in
-        kmod ) [ "$(rpm -qa zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel | grep -c "$VERSION")" == "5" ] || FORCE_REBUILD=1 ;;
-        dkms ) [ "$(rpm -qa zfs libzfs2-devel zfs-dkms spl-dkms | grep -c "$VERSION")" == "4" ] || FORCE_REBUILD=1 ;;
-    esac
-
-    if [ "$FORCE_REBUILD" != "1" ]; then
+    if [ "$FORCE_REINSTALL" != "1" ]; then
         echo "Info: Needed packages already installed and have version $VERSION"
     else
         yum -y groupinstall 'Development Tools'
@@ -155,16 +178,16 @@ elif [ "$MODE" == "from-source" ]; then
 
 fi
 
+# build dkms module
 if [ "$TYPE" == "dkms" ]; then
     VERSION="$(rpm -qa zfs-dkms | awk -F- '{print $3}')"
-    # build dkms module
     if ! (dkms install "spl/$VERSION" && dkms install "zfs/$VERSION"); then
          >&2 echo "Error: Can not build zfs dkms module"
          exit 1
     fi
 fi
 
-# check for module
+# final check for module
 if ! (find "$CHROOT/lib/modules/$(uname -r)" -name zfs.ko | grep -q "."); then
      >&2 echo "Error: Can not found installed zfs module for current kernel"
      exit 1
