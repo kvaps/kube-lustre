@@ -66,7 +66,7 @@ fi
 # install packages
 if [ "$MODE" == "from-repo" ]; then
 
-    VERSION="$(yum list available zfs | tail -n 1 | awk '{print $2}' | cut -d- -f1)"
+    VERSION="$(yum list zfs | tail -n 1 | awk '{print $2}' | cut -d- -f1)"
 
     case "$TYPE" in
         kmod )
