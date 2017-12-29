@@ -1,12 +1,12 @@
 kind: ConfigMap
 metadata:
-  name: lustre-ha-config
+  name: kube-lustre-conf
   namespace: lustre
 apiVersion: v1
 data:
   configuration: |
     {
-      "lustre-1": {
+      "configuration-1": {
         "lustre": {
           "comment": "<cluster>-<role>-<id>",
           "mgsnode": "m1c4",
@@ -21,7 +21,7 @@ data:
     }
   daemons: |
     {
-      "lustre-1": {
+      "configuration-1": {
          "mgt": ["m1c4", "m2c4"],
          "mdt0": ["m1c5", "m2c5"],
          "ost0": ["m1c6", "m2c6"],
