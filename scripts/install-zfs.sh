@@ -41,16 +41,9 @@ if [ "$MODE" == "from-repo" ]; then
 
 elif [ "$MODE" == "from-source" ]; then
 
-
     if [ "$TYPE" != "kmod" ] && [ "$TYPE" != "dkms" ]; then
         >&2 echo "Error: Please specify TYPE variable"
         >&2 echo "       TYPE=<dkms|kmod>"
-        exit 1
-    fi
-
-    if [ -z "$VERSION" ]; then
-        >&2 echo "Error: Please specify VERSION variable, example:"
-        >&2 echo "       VERSION=0.7.1"
         exit 1
     fi
 
@@ -116,6 +109,7 @@ elif [ "$MODE" == "from-source" ]; then
         # Build and install spl packages
         pushd "$SOURCES_DIR/spl"
         git fetch --tags --force
+        [ -z "$VERSION" ] && VERSION="$(git tag | head -n 1 | cut -d- -f2)"
         git checkout "spl-$VERSION"
         ./autogen.sh
         ./configure --with-spec=redhat
@@ -162,11 +156,8 @@ elif [ "$MODE" == "from-source" ]; then
 fi
 
 if [ "$TYPE" == "dkms" ]; then
-    SPL_VERSION="$(rpm -qa spl-dkms | awk -F- '{print $3}')"
-    ZFS_VERSION="$(rpm -qa zfs-dkms | awk -F- '{print $3}')"
-
     # build dkms module
-    if ! (dkms install "spl/$ZFS_VERSION" && dkms install "zfs/$ZFS_VERSION"); then
+    if ! (dkms install "spl/$VERSION" && dkms install "zfs/$VERSION"); then
          >&2 echo "Error: Can not build zfs dkms module"
          exit 1
     fi
