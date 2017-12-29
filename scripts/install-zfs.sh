@@ -15,7 +15,7 @@ if [ ! -z "$CHROOT" ]; then
 fi
 
 # check for distro
-if [ "$(sed 's/.*release\ //'  /etc/redhat-release | cut -d. -f1)" != "7" ]; then
+if [ "$(sed 's/.*release\ //' "$CHROOT/etc/redhat-release" | cut -d. -f1)" != "7" ]; then
     >&2 echo "Error: Host system not supported"
     exit 1
 fi
