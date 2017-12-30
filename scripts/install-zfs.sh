@@ -93,29 +93,9 @@ if [ "$TYPE" != "kmod" ] && [ "$TYPE" != "dkms" ]; then
     exit 1
 fi
 
-# get versions info
-INSTALLED_VERSION="$(rpm -qa zfs | awk -F- '{print $2}')"
-if [ -z "$INSTALLED_VERSION" ] || [ "$AUTO_UPDATE" == "1" ]; then
-    case "$MODE-$REPO" in
-        from_repo-zfs      ) LATEST_VERSION="$(yum list available zfs --showduplicates | grep '\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
-        from_repo-lustre   ) LATEST_VERSION="$(yum --disablerepo=* --enablerepo=lustre-server  list available zfs --showduplicates | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
-        from_source-*      ) LATEST_VERSION="$(curl https://api.github.com/repos/zfsonlinux/zfs/releases/latest -s | grep tag_name | sed 's/.*"zfs-\(.\+\)",/\1/')" ;;
-    esac
-fi
-VERSION="${VERSION:-$LATEST_VERSION}"
-VERSION="${VERSION:-$INSTALLED_VERSION}"
-
 # check for module
 if ! (find "$CHROOT/lib/modules/$(uname -r)" -name zfs.ko | grep -q "."); then
     FORCE_REINSTALL=1
-fi
-
-# check for needed packages and version
-if [ -z "$FORCE_REINSTALL" ]; then
-    case "$TYPE" in
-        kmod ) [ "$(rpm -qa zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel | grep -c "$VERSION")" == "5" ] || FORCE_REINSTALL=1 ;;
-        dkms ) [ "$(rpm -qa zfs libzfs2-devel zfs-dkms spl-dkms | grep -c "$VERSION")" == "4" ] || FORCE_REINSTALL=1 ;;
-    esac
 fi
 
 # check for source repository
@@ -127,6 +107,27 @@ if [ -z "$FORCE_REINSTALL" ]; then
     esac
 fi
 
+# get installed version
+INSTALLED_VERSION="$(rpm -qa zfs | awk -F- '{print $2}')"
+VERSION="${VERSION:-$INSTALLED_VERSION}"
+
+# get latest version
+if [ -z "$VERSION" ] || [ "$AUTO_UPDATE" == "1" ] || [ "$FORCE_REINSTALL" == "1" ]; then
+    case "$MODE-$REPO" in
+        from-repo-zfs      ) LATEST_VERSION="$(yum list available zfs --showduplicates | grep '\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
+        from-repo-lustre   ) LATEST_VERSION="$(yum --disablerepo=* --enablerepo=lustre-server  list available zfs --showduplicates | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
+        from-source-*      ) LATEST_VERSION="$(curl https://api.github.com/repos/zfsonlinux/zfs/releases/latest -s | grep tag_name | sed 's/.*"zfs-\(.\+\)",/\1/')" ;;
+    esac
+    VERSION="$LATEST_VERSION"
+fi
+
+# check for needed packages and version
+if [ -z "$FORCE_REINSTALL" ]; then
+    case "$TYPE" in
+        kmod ) [ "$(rpm -qa zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel | grep -c "$VERSION")" == "5" ] || FORCE_REINSTALL=1 ;;
+        dkms ) [ "$(rpm -qa zfs libzfs2-devel zfs-dkms spl-dkms | grep -c "$VERSION")" == "4" ] || FORCE_REINSTALL=1 ;;
+    esac
+fi
 
 # install kernel-headers
 if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/lib/modules/$(uname -r)/build" ]; then
@@ -210,12 +211,10 @@ elif [ "$MODE" == "from-source" ]; then
         case "$TYPE" in
             kmod )
                 make pkg-utils pkg-kmod
-                cleanup_wrong_versions
                 yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs/|" -e "s|^$CHROOT||" )
             ;;
             dkms )
                 make pkg-utils rpm-dkms
-                cleanup_wrong_versions
                 yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs/|" -e "s|^$CHROOT||" )
             ;;
         esac
