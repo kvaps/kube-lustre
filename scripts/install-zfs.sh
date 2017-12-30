@@ -1,6 +1,9 @@
 #!/bin/sh
 set -e
+
+# default parameters
 SOURCES_DIR="${SOURCES_DIR:-$CHROOT/usr/src/kube-lustre}"
+[ -z "$KERNEL_VERSION" ] && KERNEL_VERSION="$(uname -r)"
 
 cleanup_wrong_versions() {
     WRONG_PACKAGES="$(rpm -qa zfs kmod-zfs kmod-spl kmod-zfs kmod-spl-devel kmod-zfs-devel zfs-dkms zfs-dracut zfs-test libzpool2 libzfs2-devel libzfs2 libuutil1 libnvpair1 spl spl-dkms zfs-test | grep -v "$1" | xargs)"
@@ -94,7 +97,7 @@ if [ "$TYPE" != "kmod" ] && [ "$TYPE" != "dkms" ]; then
 fi
 
 # check for module
-if ! (find "$CHROOT/lib/modules/$(uname -r)" -name zfs.ko | grep -q "."); then
+if ! (find "$CHROOT/lib/modules/$KERNEL_VERSION" -name zfs.ko | grep -q "."); then
     FORCE_REINSTALL=1
 fi
 
@@ -130,8 +133,8 @@ if [ -z "$FORCE_REINSTALL" ]; then
 fi
 
 # install kernel-headers
-if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/lib/modules/$(uname -r)/build" ]; then
-    if ! yum install "kernel-devel-uname-r == $(uname -r)"; then
+if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/lib/modules/$KERNEL_VERSION/build" ]; then
+    if ! yum install "kernel-devel-uname-r == $KERNEL_VERSION"; then
         >&2 echo "Error: Can not found kernel-headers for current kernel"
         >&2 echo "       try to ugrade kernel then reboot your system"
         >&2 echo "       or install kernel-headers package manually"
@@ -183,7 +186,7 @@ elif [ "$MODE" == "from-source" ]; then
         [ -z "$VERSION" ] && VERSION="$(git tag | head -n 1 | cut -d- -f2)"
         git checkout "spl-$VERSION"
         ./autogen.sh
-        ./configure --with-spec=redhat
+        ./configure --with-spec=redhat --with-linux="$CHROOT/usr/src/kernels/$KERNEL_VERSION/"
         rm -f *.rpm
         case "$TYPE" in
             kmod )
@@ -206,7 +209,7 @@ elif [ "$MODE" == "from-source" ]; then
         git fetch --tags --force
         git checkout "zfs-$VERSION"
         ./autogen.sh
-        ./configure --with-spec=redhat --with-spl-obj="$SOURCES_DIR/spl"
+        ./configure --with-spec=redhat --with-spl-obj="$SOURCES_DIR/spl" --with-linux="$CHROOT/usr/src/kernels/$KERNEL_VERSION/"
         rm -f *.rpm
         case "$TYPE" in
             kmod )
@@ -234,7 +237,7 @@ if [ "$TYPE" == "dkms" ]; then
 fi
 
 # final check for module
-if ! (find "$CHROOT/lib/modules/$(uname -r)" -name zfs.ko | grep -q "."); then
+if ! (find "$CHROOT/lib/modules/$KERNEL_VERSION" -name zfs.ko | grep -q "."); then
      >&2 echo "Error: Can not found installed zfs module for current kernel"
      exit 1
 fi
