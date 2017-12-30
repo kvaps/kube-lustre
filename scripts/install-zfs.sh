@@ -174,17 +174,14 @@ elif [ "$MODE" == "from-source" ]; then
         echo "Info: Needed packages already installed and have version $VERSION"
     else
         yum -y groupinstall 'Development Tools'
-        yum -y install git zlib-devel libattr-devel libuuid-devel libblkid-devel libselinux-devel libudev-devel
+        yum -y install zlib-devel libattr-devel libuuid-devel libblkid-devel libselinux-devel libudev-devel
 
         mkdir -p "$SOURCES_DIR"
-        [ -d "$SOURCES_DIR/spl" ] || git clone https://github.com/zfsonlinux/spl.git "$SOURCES_DIR/spl"
-        [ -d "$SOURCES_DIR/zfs" ] || git clone https://github.com/zfsonlinux/zfs.git "$SOURCES_DIR/zfs"
+        [ -d "$SOURCES_DIR/spl-$VERSION" ] || curl -L "https://github.com/zfsonlinux/zfs/releases/download/zfs-$VERSION/spl-$VERSION.tar.gz" | tar -C "$SOURCES_DIR" -xzf -
+        [ -d "$SOURCES_DIR/zfs-$VERSION" ] || curl -L "https://github.com/zfsonlinux/zfs/releases/download/zfs-$VERSION/zfs-$VERSION.tar.gz" | tar -C "$SOURCES_DIR" -xzf -
 
         # Build and install spl packages
-        pushd "$SOURCES_DIR/spl"
-        git fetch --tags --force
-        [ -z "$VERSION" ] && VERSION="$(git tag | head -n 1 | cut -d- -f2)"
-        git checkout "spl-$VERSION"
+        pushd "$SOURCES_DIR/spl-$VERSION"
         ./autogen.sh
         ./configure --with-spec=redhat --with-linux="$CHROOT/usr/src/kernels/$KERNEL_VERSION/"
         rm -f *.rpm
@@ -193,32 +190,30 @@ elif [ "$MODE" == "from-source" ]; then
                 make pkg-utils pkg-kmod
                 yum remove -y zfs-dkms spl-dkms
                 cleanup_wrong_versions "$VERSION"
-                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/spl/|" -e "s|^$CHROOT||" )
+                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/spl-$VERSION/|" -e "s|^$CHROOT||" )
             ;;
             dkms )
                 make pkg-utils rpm-dkms
                 yum remove -y kmod-zfs kmod-spl kmod-zfs kmod-spl-devel kmod-zfs-devel
                 cleanup_wrong_versions "$VERSION"
-                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/spl/|" -e "s|^$CHROOT||" )
+                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/spl-$VERSION/|" -e "s|^$CHROOT||" )
             ;;
         esac
         popd
 
         # Build and install zfs packages
-        pushd "$SOURCES_DIR/zfs"
-        git fetch --tags --force
-        git checkout "zfs-$VERSION"
+        pushd "$SOURCES_DIR/zfs-$VERSION"
         ./autogen.sh
-        ./configure --with-spec=redhat --with-spl-obj="$SOURCES_DIR/spl" --with-linux="$CHROOT/usr/src/kernels/$KERNEL_VERSION/"
+        ./configure --with-spec=redhat --with-spl-obj="$SOURCES_DIR/spl-$VERSION" --with-linux="$CHROOT/usr/src/kernels/$KERNEL_VERSION/"
         rm -f *.rpm
         case "$TYPE" in
             kmod )
                 make pkg-utils pkg-kmod
-                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs/|" -e "s|^$CHROOT||" )
+                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs-$VERSION/|" -e "s|^$CHROOT||" )
             ;;
             dkms )
                 make pkg-utils rpm-dkms
-                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs/|" -e "s|^$CHROOT||" )
+                yum localinstall -y $(ls -1 *.rpm | grep -v debuginfo | grep -v 'src\.rpm' | sed -e "s|^|$SOURCES_DIR/zfs-$VERSION/|" -e "s|^$CHROOT||" )
             ;;
         esac
         popd
