@@ -7,6 +7,35 @@ cleanup_wrong_versions() {
     [ -z "$WRONG_PACKAGES" ] || yum -y remove $WRONG_PACKAGES
 }
 
+install_lustre_repo() {
+    if [ -z "$1" ]; then
+        RELEASE="latest-release"
+    else
+        RELEASE="lustre-$1"
+    fi
+
+    cat > "$CHROOT/etc/yum.repos.d/lustre.repo" <<EOF
+[lustre-server]
+name=lustre-server
+baseurl=https://downloads.hpdd.intel.com/public/lustre/$RELEASE/el7/server
+# exclude=*debuginfo*
+gpgcheck=0
+
+[lustre-client]
+name=lustre-client
+baseurl=https://downloads.hpdd.intel.com/public/lustre/$RELEASE/el7/client
+# exclude=*debuginfo*
+gpgcheck=0
+
+[e2fsprogs-wc]
+name=e2fsprogs-wc
+baseurl=https://downloads.hpdd.intel.com/public/e2fsprogs/latest/el7
+# exclude=*debuginfo*
+gpgcheck=0
+EOF
+
+}
+
 # if chroot is set, use yum and rpm from chroot
 if [ ! -z "$CHROOT" ]; then
     alias rpm="chroot $CHROOT rpm"
@@ -22,43 +51,55 @@ fi
 
 rpm -q --quiet epel-release || yum -y install epel-release
 
-# initial checks
+# install repositories
 if [ "$MODE" == "from-repo" ]; then
 
-    # install repositories at this time
-    rpm -q zfs-release || yum -y install --nogpgcheck http://download.zfsonlinux.org/epel/zfs-release.el7.noarch.rpm
-    case "$TYPE" in
-        kmod) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo ;;
-        kmod-testing) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-testing-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo && TYPE=kmod ;;
-        dkms) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo ;;
-        dkms-testing) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-testing\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo && TYPE=dkms ;;
-        *) 
-            >&2 echo "Error: Please specify TYPE variable"
-            >&2 echo "       TYPE=<dkms|kmod|dkms-testing|kmod-testing>"
-            exit 1
-        ;;
-    esac
-
-elif [ "$MODE" == "from-source" ]; then
-
-    if [ "$TYPE" != "kmod" ] && [ "$TYPE" != "dkms" ]; then
-        >&2 echo "Error: Please specify TYPE variable"
-        >&2 echo "       TYPE=<dkms|kmod>"
-        exit 1
+    if [ "$REPO" == "zfs" ]; then
+        # install repositories at this time
+        rpm -q zfs-release || yum -y install --nogpgcheck http://download.zfsonlinux.org/epel/zfs-release.el7.noarch.rpm
+        case "$TYPE" in
+            kmod) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo ;;
+            kmod-testing) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-testing-kmod\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo && TYPE=kmod ;;
+            dkms) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo ;;
+            dkms-testing) sed -e 's/^enabled=.\?/enabled=0/' -e '/\[zfs-testing\]/,/^\[.*\]$/ s/^enabled=.\?/enabled=1/' -i /etc/yum.repos.d/zfs.repo && TYPE=dkms ;;
+        esac
+    elif [ "$REPO" == "lustre" ]; then
+        install_lustre_repo "$LUSTRE_VERSION"
     fi
 
-else
+fi
+
+# check for mode
+if [ "$MODE" != "from-source" ] && [ "$MODE" != "from-repo" ]; then
     >&2 echo "Error: Please specify MODE variable"
     >&2 echo "       MODE=<from-repo|from-source>"
+    exit 1
+fi
+
+# check for repo
+if [ "$MODE" == "from-repo" ] && [ "$REPO" != "lustre" ] && [ "$REPO" != "zfs" ]; then
+    >&2 echo "Error: Please specify REPO variable"
+    >&2 echo "       REPO=<lustre|zfs>"
+    exit 1
+fi
+
+# check for type
+if [ "$TYPE" != "kmod" ] && [ "$TYPE" != "dkms" ]; then
+    >&2 echo "Error: Please specify TYPE variable"
+    if [ "$REPO" == "zfs" ]
+    then >&2 echo "       TYPE=<dkms|kmod|dkms-testing|kmod-testing>"
+    else >&2 echo "       TYPE=<dkms|kmod>"
+    fi
     exit 1
 fi
 
 # get versions info
 INSTALLED_VERSION="$(rpm -qa zfs | awk -F- '{print $2}')"
 if [ -z "$INSTALLED_VERSION" ] || [ "$AUTO_UPDATE" == "1" ]; then
-    case "$MODE" in
-        from_repo   ) LATEST_VERSION="$(yum list available zfs --showduplicates | grep '\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
-        from_source ) LATEST_VERSION="$(curl https://api.github.com/repos/zfsonlinux/zfs/releases/latest -s | grep tag_name | sed 's/.*"zfs-\(.\+\)",/\1/')" ;;
+    case "$MODE-$REPO" in
+        from_repo-zfs      ) LATEST_VERSION="$(yum list available zfs --showduplicates | grep '\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
+        from_repo-lustre   ) LATEST_VERSION="$(yum --disablerepo=* --enablerepo=lustre-server  list available zfs --showduplicates | tail -n 1 | awk '{print $2}' | cut -d- -f1)" ;;
+        from_source-*      ) LATEST_VERSION="$(curl https://api.github.com/repos/zfsonlinux/zfs/releases/latest -s | grep tag_name | sed 's/.*"zfs-\(.\+\)",/\1/')" ;;
     esac
 fi
 VERSION="${VERSION:-$LATEST_VERSION}"
@@ -77,11 +118,12 @@ if [ -z "$FORCE_REINSTALL" ]; then
     esac
 fi
 
-# check for source of installation
+# check for source repository
 if [ -z "$FORCE_REINSTALL" ]; then
-    case "$MODE" in
-        from-repo   ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' || FORCE_REINSTALL=1 ;;
-        from-source ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' && FORCE_REINSTALL=1 ;;
+    case "$MODE-$REPO" in
+        from-repo-zfs    ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\)$' || FORCE_REINSTALL=1 ;;
+        from-repo-lustre ) yum list installed zfs | tail -n 1 | grep -q '@lustre-server$' || FORCE_REINSTALL=1 ;;
+        from-source-*    ) yum list installed zfs | tail -n 1 | grep -q '@\(zfs-kmod\|zfs-testing-kmod\|zfs\|zfs-testing\|lustre-server\)$' && FORCE_REINSTALL=1 ;;
     esac
 fi
 
@@ -100,6 +142,9 @@ fi
 # install packages
 if [ "$MODE" == "from-repo" ]; then
 
+    DISABLE_ZFS_REPOS="$(yum repolist all | grep '^zfs' | awk -F'[ /]' '{printf "--disablerepo=" $1 " "}')"
+    DISABLE_LUSTRE_REPOS="$(yum repolist all | grep '^lustre' | awk -F'[ /]' '{printf "--disablerepo=" $1 " "}')"
+
     if [ "$FORCE_REINSTALL" != "1" ]; then
         echo "Info: Needed packages already installed"
     else
@@ -107,12 +152,14 @@ if [ "$MODE" == "from-repo" ]; then
             kmod )
                 yum remove -y zfs-dkms spl-dkms
                 cleanup_wrong_versions "$VERSION"
-                yum install -y zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel zfs-dracut
+                [ "$REPO" == zfs ] && yum $DISABLE_LUSTRE_REPOS install -y zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel
+                [ "$REPO" == lustre ] && yum $DISABLE_ZFS_REPOS install -y zfs libzfs2-devel kmod-zfs kmod-spl-devel kmod-zfs-devel
             ;;
             dkms )
-                yum remove -y kmod-zfs kmod-spl kmod-zfs kmod-spl-devel kmod-zfs-devel zfs-dracut
+                yum remove -y kmod-zfs kmod-spl kmod-zfs kmod-spl-devel kmod-zfs-devel
                 cleanup_wrong_versions "$VERSION"
-                yum install -y zfs libzfs2-devel zfs-dkms spl-dkms
+                [ "$REPO" == zfs ] && yum $DISABLE_LUSTRE_REPOS install -y zfs libzfs2-devel zfs-dkms spl-dkms
+                [ "$REPO" == lustre ] && yum $DISABLE_ZFS_REPOS install -y zfs libzfs2-devel zfs-dkms spl-dkms
             ;;
         esac
     fi
