@@ -134,7 +134,7 @@ fi
 
 # install kernel-headers
 if ! ( [ "$MODE" == "from-repo" ] && [ "$TYPE" == "kmod" ] ) && [ ! -d "$CHROOT/lib/modules/$KERNEL_VERSION/build" ]; then
-    if ! yum install "kernel-devel-uname-r == $KERNEL_VERSION"; then
+    if ! yum -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
         >&2 echo "Error: Can not found kernel-headers for current kernel"
         >&2 echo "       try to ugrade kernel then reboot your system"
         >&2 echo "       or install kernel-headers package manually"
