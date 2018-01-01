@@ -9,7 +9,7 @@ UTILS_VERSION="9.1.0-1"
 
 install_drbd_dkms() {
 
-    if ! yum -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
+    if ! $YUM -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
         >&2 echo "Error: Can not found kernel-headers for current kernel"
         >&2 echo "       try to ugrade kernel package then reboot your system"
         >&2 echo "       or install kernel-headers package manually"
@@ -17,10 +17,10 @@ install_drbd_dkms() {
     fi
 
     # install dkms
-    rpm -q dkms || yum -y install dkms
+    $RPM -q dkms || $YUM -y install dkms
     
     # install drbd-dkms module
-    if ! dkms status -m drbd -v "$VERSION" | grep -q "."; then
+    if ! $DKMS status -m drbd -v "$VERSION" | grep -q "."; then
 
         rm -rf "$CHROOT/usr/src/drbd-$VERSION"
         curl "http://www.linbit.com/www.linbit.com/downloads/drbd/8.4/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
@@ -38,21 +38,25 @@ CLEAN="make -C drbd clean"
 AUTOINSTALL=yes
 EOF
     
-        dkms add "drbd/$VERSION"
+        $DKMS add "drbd/$VERSION"
     fi
 
-    dkms install "drbd/$VERSION"
+    $DKMS install "drbd/$VERSION"
 }
 
 install_drbd_utils() {
-    yum -y install "http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-$UTILS_VERSION.el7.elrepo.x86_64.rpm"
+    $YUM -y install "http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-$UTILS_VERSION.el7.elrepo.x86_64.rpm"
 }
 
 # if chroot is set, use yum and rpm from chroot
 if [ ! -z "$CHROOT" ]; then
-    alias rpm="chroot $CHROOT rpm"
-    alias yum="chroot $CHROOT yum"
-    alias dkms="chroot $CHROOT dkms"
+    RPM="chroot $CHROOT rpm"
+    YUM="chroot $CHROOT yum"
+    DKMS="chroot $CHROOT dkms"
+else
+    RPM="rpm"
+    YUM="yum"
+    DKMS="dkms"
 fi
 
 # check for distro
