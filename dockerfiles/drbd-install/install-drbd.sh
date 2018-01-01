@@ -23,7 +23,7 @@ install_drbd_dkms() {
     if ! $DKMS status -m drbd -v "$VERSION" | grep -q "."; then
 
         rm -rf "$CHROOT/usr/src/drbd-$VERSION"
-        curl "http://www.linbit.com/www.linbit.com/downloads/drbd/8.4/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
+        $CURL "http://www.linbit.com/www.linbit.com/downloads/drbd/8.4/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
         
         patch -d "$CHROOT/usr/src/drbd-$VERSION" -p1 < add-RHEL74-compat-hack.patch
         
@@ -53,10 +53,12 @@ if [ ! -z "$CHROOT" ]; then
     RPM="chroot $CHROOT rpm"
     YUM="chroot $CHROOT yum"
     DKMS="chroot $CHROOT dkms"
+    CURL="chroot $CHROOT curl"
 else
     RPM="rpm"
     YUM="yum"
     DKMS="dkms"
+    CURL="curl"
 fi
 
 # check for distro
