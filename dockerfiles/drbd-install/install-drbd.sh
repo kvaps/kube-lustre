@@ -25,7 +25,10 @@ install_drbd_dkms() {
         rm -rf "$CHROOT/usr/src/drbd-$VERSION"
         $CURL "http://www.linbit.com/www.linbit.com/downloads/drbd/8.4/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
         
-        patch -d "$CHROOT/usr/src/drbd-$VERSION" -p1 < add-RHEL74-compat-hack.patch
+        PATCH_PATH="$PWD/add-RHEL74-compat-hack.patch"
+        pushd "$CHROOT/usr/src/drbd-$VERSION" 
+        patch -p1 < "$PATCH_PATH"
+        popd
         
         cat > "$CHROOT/usr/src/drbd-$VERSION/dkms.conf" << EOF
 PACKAGE_NAME="drbd"
