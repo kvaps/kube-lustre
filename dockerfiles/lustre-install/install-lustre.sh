@@ -35,15 +35,19 @@ EOF
 
 install_dkms_module() {
     local MODULE="$1"
-    local VERSION="$(rpm -q "$1-dkms" | sed "s/^$1-dkms-\([^-]\+\).*/\1/")"
-    dkms install "$MODULE/$VERSION"
+    local VERSION="$($RPM -q "$1-dkms" | sed "s/^$1-dkms-\([^-]\+\).*/\1/")"
+    $DKMS install "$MODULE/$VERSION"
 }
 
 # if chroot is set, use yum and rpm from chroot
 if [ ! -z "$CHROOT" ]; then
-    alias rpm="chroot $CHROOT rpm"
-    alias yum="chroot $CHROOT yum"
-    alias dkms="chroot $CHROOT dkms"
+    RPM="chroot $CHROOT rpm"
+    YUM="chroot $CHROOT yum"
+    DKMS="chroot $CHROOT dkms"
+else
+    RPM="rpm"
+    YUM="yum"
+    DKMS="dkms"
 fi
 
 # check for distro
@@ -66,25 +70,25 @@ case 1 in
 
     "$INSTALL_ZFS"|"$INSTALL_LUSTRE")
 
-        if ! yum -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
+        if ! $YUM -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
             >&2 echo "Error: Can not found kernel-headers for current kernel"
             >&2 echo "       try to ugrade kernel package then reboot your system"
             >&2 echo "       or install kernel-headers package manually"
             exit 1
         fi
 
-        rpm -q --quiet epel-release || yum -y install epel-release
+        $RPM -q --quiet epel-release || $YUM -y install epel-release
         install_lustre_repo "$VERSION"
     ;&
 
     "$INSTALL_ZFS")
-        yum -y install zfs zfs-dkms
+        $YUM -y install zfs zfs-dkms
         install_dkms_module spl
         install_dkms_module zfs
     ;;
 
     "$INSTALL_LUSTRE")
-        yum -y install lustre lustre-dkms
+        $YUM -y install lustre lustre-dkms
         install_dkms_module lustre
     ;;
 
