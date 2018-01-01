@@ -66,33 +66,29 @@ if ! (find "$CHROOT/lib/modules/$KERNEL_VERSION" -name lustre.ko | grep -q ".");
     INSTALL_LUSTRE=1
 fi
 
-case 1 in
+if [ "$INSTALL_ZFS" == 1 ] || [ "$INSTALL_LUSTRE" == 1 ]; then
 
-    "$INSTALL_ZFS"|"$INSTALL_LUSTRE")
+    if ! $YUM -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
+        >&2 echo "Error: Can not found kernel-headers for current kernel"
+        >&2 echo "       try to ugrade kernel package then reboot your system"
+        >&2 echo "       or install kernel-headers package manually"
+        exit 1
+    fi
 
-        if ! $YUM -y install "kernel-devel-uname-r == $KERNEL_VERSION"; then
-            >&2 echo "Error: Can not found kernel-headers for current kernel"
-            >&2 echo "       try to ugrade kernel package then reboot your system"
-            >&2 echo "       or install kernel-headers package manually"
-            exit 1
-        fi
+    $RPM -q --quiet epel-release || $YUM -y install epel-release
+    install_lustre_repo "$VERSION"
+fi
 
-        $RPM -q --quiet epel-release || $YUM -y install epel-release
-        install_lustre_repo "$VERSION"
-    ;&
+if [ "$INSTALL_ZFS" == 1 ]; then
+    $YUM -y install zfs zfs-dkms
+    install_dkms_module spl
+    install_dkms_module zfs
+fi
 
-    "$INSTALL_ZFS")
-        $YUM -y install zfs zfs-dkms
-        install_dkms_module spl
-        install_dkms_module zfs
-    ;;
-
-    "$INSTALL_LUSTRE")
-        $YUM -y install lustre lustre-dkms
-        install_dkms_module lustre
-    ;;
-
-esac
+if [ "$INSTALL_LUSTRE" == 1 ]; then
+    $YUM -y install lustre lustre-dkms
+    install_dkms_module lustre
+fi
 
 # final check for module
 if ! (find "$CHROOT/lib/modules/$KERNEL_VERSION" -name zfs.ko | grep -q "."); then
