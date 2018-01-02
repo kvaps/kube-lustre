@@ -1,0 +1,39 @@
+#!/bin/sh
+RUN_TIMESTUMP=$(date "+%s")
+ALLOW_FORCE_PRIMARY_DELAY=""
+
+PROTOCOL=${PROTOCOL:-C}
+SYNCER_RATE=${SYNCER_RATE:-5M}
+NODE1_METADISK=${NODE1_METADISK:-internal}
+NODE2_METADISK=${NODE1_METADISK:-internal}
+
+for i in RESOURCE_NAME DEVICE NODE1_DISK NODE1_IP NODE1_PORT DEVICE NODE2_DISK NODE2_IP NODE2_PORT NODE1_NAME NODE2_NAME; do
+    if [ -z "$(eval "echo \"\$$i"\")" ]; then
+        >&2 echo "Error: variable $i is not specified"
+        exit 1
+    fi
+done
+
+case "$HOSTNAME" in
+    $NODE1_NAME ) export NODE_NAME="$NODE1_NAME" NODE_DISK="$NODE1_DISK" ;;
+    $NODE2_NAME ) export NODE_NAME="$NODE2_NAME" NODE_DISK="$NODE2_DISK" ;;
+esac
+
+# Write config
+rm -f "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
+eval "echo \"$(cat template.res)\"" > "$CHROOT/tmp/$RESOURCE_NAME.res"
+drbdadm sh-nop -t "/tmp/$RESOURCE_NAME.res"
+mv "$CHROOT/tmp/$RESOURCE_NAME.res" "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
+
+# Prepare drive
+if ! wipefs "$NODE_DISK" | grep -q "."; then
+    drbdadm create-md "$RESOURCE_NAME" &&
+    JUST_CRETED="$(echo "yes" | nc -w 5 -n -l -p 7788)"
+
+fi
+
+if [ ! -z "$CREATION_TIMESTUMP" ] [ "$FIRST_PRIMARY" == "$HOSTNAME" ]; then
+    drbdadm primary --force $RESOURCE_NAME
+    drbdadm secondary $RESOURCE_NAME
+fi
+
