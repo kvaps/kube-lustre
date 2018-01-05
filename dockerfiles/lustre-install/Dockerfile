@@ -2,4 +2,4 @@
 
 FROM alpine
 ADD install-lustre.sh /
-CMD /install-lustre.sh
+ENTRYPOINT /install-lustre.sh
