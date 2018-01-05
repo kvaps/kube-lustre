@@ -76,6 +76,7 @@ if [ "$JUST_CREATED" == "yes" ] && [ "$HOSTNAME" == "$NODE1_NAME" ] &&
    [ "$($DRBDADM status "$RESOURCE_NAME" | grep -c '\( disk:Inconsistent\| role:Secondary\| replication:Established\| peer-disk:Inconsistent\)')" == "4" ]
 then
     $DRBDADM primary --force "$RESOURCE_NAME"
+    sleep 1
     $DRBDADM secondary "$RESOURCE_NAME"
 fi
 
