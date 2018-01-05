@@ -1,10 +1,12 @@
 # docker run -v /:/host-root --net=host --privileged \
 #    -e CHROOT=/host-root \
 #    -e HA_BACKEND=drbd \
-#    -e RESOURCE_NAME=lustre1-mdt0 \
+#    -e RESOURCE_NAME=lustre1-ost0 \
 #    -e DEVICE=/dev/drbd0 \
 #    -e FSNAME=lustre1 \
-#    -e SERVICENODES=\"10.28.38.11@tcp 10.28.38.12@tcp\""
+#    -e TYPE=ost \
+#    -e MGSNODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
+#    -e SERVICENODE=\"10.28.38.13@tcp,10.28.38.14@tcp\""
 #    kvaps/lustre
 
 FROM alpine

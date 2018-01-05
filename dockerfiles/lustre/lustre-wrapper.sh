@@ -37,23 +37,31 @@ case "$TYPE" in
 esac
 
 if [ "${#FSNAME}" -gt "8" ]; then
-    >&2 echo "Error: variable FSNAME cannot be greater than 8 symbols"
+    >&2 echo "Error: variable FSNAME cannot be greater than 8 symbols, example:"
+    >&2 echo "       FSNAME=lustre1"
     exit 1
+else
+    FSNAME_CMD="--fsname=\"$FSNAME\""
 fi
 
-if [ "$TYPE" != "mgs" ] && [ -z "$INDEX" ]; then
-    >&2 echo "Error: variable INDEX is not specified"
-    exit 1
+if [ "$TYPE" != "mgs" ]; then
+    if [ -z "$INDEX" ]; then
+        >&2 echo "Error: variable INDEX is not specified, example:"
+        >&2 echo "       INDEX=1"
+        exit 1
+    else
+        INDEX_CMD="--index=\"$INDEX\""
+    fi
 fi
 
-if [ "$TYPE" != "mgs" ] && [ -z "$INDEX" ]; then
-    >&2 echo "Error: variable INDEX is not specified"
-    exit 1
-fi
-
-if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] ) && [ -z "$MGSNODE" ]; then
-    >&2 echo "Error: variable MGSNODE is not specified"
-    exit 1
+if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] );
+    if [ -z "$MGSNODE" ]; then
+        >&2 echo "Error: variable MGSNODE is not specified, example:"
+        >&2 echo "       SERVICENODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
+        exit 1
+    else
+        MGSNODE_CMD="--mgsnode=\"$MGSNODE\""
+    fi
 fi
 
 if [ "$HA_BACKEND" == "drbd" ]; then
@@ -62,12 +70,13 @@ if [ "$HA_BACKEND" == "drbd" ]; then
             >&2 echo "Error: variable RESOURCE_NAME is not specified for HA_BACKEND=drbd"
             exit 1
         ;;
-        "$SERVICENODES" )
-            >&2 echo "Error: variable SERVICENODES is not specified for HA_BACKEND=drbd, example:"
-            >&2 echo "       SERVICENODES=\"10.28.38.11@tcp 10.28.38.12@tcp\""
+        "$SERVICENODE" )
+            >&2 echo "Error: variable SERVICENODE is not specified for HA_BACKEND=drbd, example:"
+            >&2 echo "       SERVICENODE=\"10.28.38.13@tcp,10.28.38.14@tcp\""
             exit 1
         ;;
     esac
+    SERVICENODE_CMD="--servicenode=\"$SERVICENODE\""
 fi
 
 if [ ! -z "$CHROOT" ]; then
@@ -94,7 +103,7 @@ fi
 
 # Prepare drive
 if ! $WIPEFS "$DEVICE" | grep -q "."; then
-    $MKFS_LUSTRE --fsname="$FSNAME" --index="$INDEX" $TYPE_CMD --backfstype=zfs "$POOL/$NAME" "$DEVICE"
+    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs "$POOL/$NAME" "$DEVICE"
 fi
 
 # Set exit trap
