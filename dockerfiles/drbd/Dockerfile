@@ -1,5 +1,5 @@
-# docker run -v /:/host-root 
-#    -e CHROOT=/host-root
+# docker run -v /:/host-root --net=host --privileged \
+#    -e CHROOT=/host-root \
 #    -e RESOURCE_NAME=lustre1-mdt0 \
 #    -e DEVICE=/dev/drbd0 \
 #    -e NODE1_NAME=m1c1 \

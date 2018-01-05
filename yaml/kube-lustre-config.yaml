@@ -22,7 +22,7 @@ data:
   daemons: |
     {
       "configuration-1": {
-         "mgt": ["m1c4", "m2c4"],
+         "mgs": ["m1c4", "m2c4"],
          "mdt0": ["m1c5", "m2c5"],
          "ost0": ["m1c6", "m2c6"],
          "ost1": ["m1c7", "m2c7"]

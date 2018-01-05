@@ -36,6 +36,11 @@ fi
 # Check for module
 $MODPROBE drbd
 
+# Stopping resource if it is already exists
+if $DRBDADM status lustre1-mdt0 2>/dev/null; then
+    $DRBDADM down "$RESOURCE_NAME"
+fi
+
 # Write config
 rm -f "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
 eval "echo \"$(cat template.res)\"" > "$CHROOT/tmp/$RESOURCE_NAME.res"
@@ -60,7 +65,7 @@ if ! $WIPEFS "$NODE_DISK" | grep -q "."; then
 fi
 
 # Set exit trap
-trap "$DRBDADM down \"$RESOURCE_NAME\" || exit 1" EXIT
+trap "$DRBDADM down \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM
 
 # Start daemon
 $DRBDADM up "$RESOURCE_NAME"
