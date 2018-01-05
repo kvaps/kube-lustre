@@ -37,7 +37,7 @@ fi
 $MODPROBE drbd
 
 # Stopping resource if it is already exists
-if $DRBDADM status lustre1-mdt0 2>/dev/null; then
+if $DRBDADM status lustre1-mdt0 &>/dev/null; then
     $DRBDADM down "$RESOURCE_NAME"
 fi
 
