@@ -71,7 +71,7 @@ trap "$DRBDADM down \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTER
 $DRBDADM up "$RESOURCE_NAME"
 
 # Define master for first time
-sleep 10
+sleep 5
 if [ "$JUST_CREATED" == "yes" ] && [ "$HOSTNAME" == "$NODE1_NAME" ] &&
    [ "$($DRBDADM status "$RESOURCE_NAME" | grep -c '\( disk:Inconsistent\| role:Secondary\| replication:Established\| peer-disk:Inconsistent\)')" == "4" ]
 then
@@ -80,4 +80,4 @@ then
 fi
 
 # Sleep calm
-tail -f /dev/null
+tail -f /dev/null & wait $!
