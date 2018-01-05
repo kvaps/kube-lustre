@@ -52,10 +52,10 @@ if ! $WIPEFS "$NODE_DISK" | grep -q "."; then
     $DRBDADM create-md "$RESOURCE_NAME" &&
     case "$HOSTNAME" in
         $NODE1_NAME )
-            JUST_CRETED="$(echo yes | nc -w "$CREATION_TIMEOUT" -n -l -p "$NODE1_PORT" )"
+            JUST_CREATED="$(echo yes | nc -w "$CREATION_TIMEOUT" -n -l -p "$NODE1_PORT" )"
         ;;
         $NODE2_NAME )
-            JUST_CRETED="$(
+            JUST_CREATED="$(
                 until echo 'yes' | nc "$NODE1_NAME" "$NODE1_PORT"; do
                     [ "$((CREATION_TIMEOUT--))" -gt 0 ] && sleep 1 || exit 0;
                 done
