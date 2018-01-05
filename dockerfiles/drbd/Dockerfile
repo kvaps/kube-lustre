@@ -14,4 +14,4 @@
 
 FROM alpine
 ADD drbd-wrapper.sh template.res /
-ENTRYPOINT /drbd-wrapper.sh
+CMD ["/drbd-wrapper.sh"]

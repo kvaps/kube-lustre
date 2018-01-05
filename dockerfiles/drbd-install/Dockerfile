@@ -2,4 +2,4 @@
 
 FROM alpine
 ADD install-drbd.sh add-RHEL74-compat-hack.patch /
-ENTRYPOINT /install-drbd.sh
+CMD ["/install-drbd.sh"]
