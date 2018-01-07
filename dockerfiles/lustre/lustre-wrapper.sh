@@ -41,7 +41,7 @@ if [ "${#FSNAME}" -gt "8" ]; then
     >&2 echo "       FSNAME=lustre1"
     exit 1
 else
-    FSNAME_CMD="--fsname=\"$FSNAME\""
+    FSNAME_CMD="--fsname=$FSNAME"
 fi
 
 if [ "$TYPE" != "mgs" ]; then
@@ -50,7 +50,7 @@ if [ "$TYPE" != "mgs" ]; then
         >&2 echo "       INDEX=1"
         exit 1
     else
-        INDEX_CMD="--index=\"$INDEX\""
+        INDEX_CMD="--index=$INDEX"
     fi
 fi
 
@@ -60,7 +60,7 @@ if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] ); then
         >&2 echo "       SERVICENODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
         exit 1
     else
-        MGSNODE_CMD="--mgsnode=\"$MGSNODE\""
+        MGSNODE_CMD="--mgsnode=$MGSNODE"
     fi
 fi
 
@@ -76,7 +76,7 @@ if [ "$HA_BACKEND" == "drbd" ]; then
             exit 1
         ;;
     esac
-    SERVICENODE_CMD="--servicenode=\"$SERVICENODE\""
+    SERVICENODE_CMD="--servicenode=$SERVICENODE"
 fi
 
 if [ ! -z "$CHROOT" ]; then
@@ -103,9 +103,9 @@ fi
 
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
-    trap "$ZPOOL export -f \"$POOL\" && $DRBDADM secondary \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM
+    trap "($ZPOOL export -f \"$POOL\"; $DRBDADM secondary \"$RESOURCE_NAME\") && exit 0 || exit 1" SIGINT SIGHUP SIGTERM EXIT
 else
-    trap "$ZPOOL export -f \"$POOL\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM
+    trap "$ZPOOL export -f \"$POOL\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM EXIT
 fi
 
 # Enable drbd primary
@@ -113,13 +113,13 @@ if [ "$HA_BACKEND" == "drbd" ]; then
     $DRBDADM primary "$RESOURCE_NAME"
 fi
 
-# Prepare drive
 if ! $WIPEFS "$DEVICE" | grep -q "."; then
-    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs "$POOL/$NAME" "$DEVICE"
+    # Prepare drive
+    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs --force-nohostid "$POOL/$NAME" "$DEVICE"
+else
+    # Start daemon
+    $ZPOOL import -o cachefile=none "$POOL"
 fi
-
-# Start daemon
-$ZPOOL import -o cachefile=none "$POOL"
 
 # Sleep calm
 tail -f /dev/null & wait $!

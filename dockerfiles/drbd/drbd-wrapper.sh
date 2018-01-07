@@ -65,7 +65,7 @@ if ! $WIPEFS "$NODE_DISK" | grep -q "."; then
 fi
 
 # Set exit trap
-trap "rm -f \"$CHROOT/etc/drbd.d/$RESOURCE_NAME.res\"; $DRBDADM down \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM
+trap "rm -f \"$CHROOT/etc/drbd.d/$RESOURCE_NAME.res\"; $DRBDADM down \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM EXIT
 
 # Start daemon
 $DRBDADM up "$RESOURCE_NAME"
