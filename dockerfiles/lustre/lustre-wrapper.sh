@@ -94,6 +94,7 @@ else
 fi
 
 # Check for module
+$MODPROBE zfs
 $MODPROBE lustre
 
 # Check for drbd resource
