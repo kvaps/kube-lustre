@@ -54,7 +54,7 @@ if [ "$TYPE" != "mgs" ]; then
     fi
 fi
 
-if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] );
+if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] ); then
     if [ -z "$MGSNODE" ]; then
         >&2 echo "Error: variable MGSNODE is not specified, example:"
         >&2 echo "       SERVICENODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
@@ -101,11 +101,6 @@ if [ "$HA_BACKEND" == "drbd" ]; then
     $DRBDADM status "$RESOURCE_NAME"
 fi
 
-# Prepare drive
-if ! $WIPEFS "$DEVICE" | grep -q "."; then
-    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs "$POOL/$NAME" "$DEVICE"
-fi
-
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
     trap "$ZPOOL export -f \"$POOL\" && $DRBDADM secondary \"$RESOURCE_NAME\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM
@@ -116,6 +111,11 @@ fi
 # Enable drbd primary
 if [ "$HA_BACKEND" == "drbd" ]; then
     $DRBDADM primary "$RESOURCE_NAME"
+fi
+
+# Prepare drive
+if ! $WIPEFS "$DEVICE" | grep -q "."; then
+    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs "$POOL/$NAME" "$DEVICE"
 fi
 
 # Start daemon
