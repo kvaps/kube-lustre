@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ${APP_NAME}-drbd
+  namespace: lustre
+  labels:
+      app: ${APP_NAME}-drbd
+spec:
+  selector:
+    matchLabels:
+      name: ${NODE_LABEL}
+  template:
+    metadata:
+      labels:
+        name: ${APP_NAME}-drbd
+    spec:
+      initContainers:
+      - name: drbd-install
+        image: kvaps/drbd-install
+        env:
+        - name: CHROOT
+          value: /host-root
+        volumeMounts:
+        - name: host-path
+          mountPath: /host-path
+      containers:
+      - name: ${APP_NAME}-drbd
+        image: kvaps/drbd
+        env:
+        - name: CHROOT
+          value: /host-root
+        - name: RESOURCE_NAME
+          value: ${APP_NAME}
+        - name: DEVICE
+          value: ${DRBD_DEVICE}
+        - name: NODE1_NAME
+          value: ${NODE1_NAME}
+        - name: NODE1_IP
+          value: ${NODE1_IP}
+        - name: DRBD_NODE1_DISK
+          value: ${NODE1_DISK}
+        - name: DRBD_NODE1_PORT
+          value: ${NODE1_PORT}
+        - name: NODE2_NAME
+          value: ${NODE2_NAME}
+        - name: NODE2_IP
+          value: ${NODE2_IP}
+        - name: DRBD_NODE2_DISK
+          value: ${NODE2_DISK}
+        - name: DRBD_NODE2_PORT
+          value: ${NODE2_PORT}
+        volumeMounts:
+        - name: host-path
+          mountPath: /host-path
+      terminationGracePeriodSeconds: 10
+      volumes:
+      - name: host-path
+        hostPath:
+          path: /
