@@ -66,7 +66,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
             exit 1
         fi
 
-        for i in NODE1_NAME NODE1_IP LUSTRE_FSNAME LUSTRE_INSTALL LUSTRE_MGSNODE LUSTRE_DEVICE LUSTRE_INDEX; do
+        for i in NODE1_NAME NODE1_IP LUSTRE_FSNAME LUSTRE_INSTALL LUSTRE_MGSNODE LUSTRE_DEVICE LUSTRE_TYPE LUSTRE_INDEX; do
             if [ "$(eval "echo \"\$$i"\")" == "null" ]; then
                 >&2 echo "Error: variable $i is not specified for $DAEMON"
                 exit 1
@@ -80,6 +80,24 @@ for CONFIGURATION in $CONFIGURATIONS; do
                     exit 1
                 fi
             done
+        fi
+
+        case "$LUSTRE_TYPE" in
+            ost ) : ;;
+            mdt ) : ;;
+            mgs ) : ;;
+            mdt-mgs ) : ;;
+            * )
+                >&2 echo "Error: variable LUSTRE_TYPE is specified wrong"
+                >&2 echo "       TYPE=<mgs|mdt|ost|mdt-mgs>"
+                exit 1
+            ;;
+        esac
+
+        if [ "${#LUSTRE_FSNAME}" -gt "8" ]; then
+            >&2 echo "Error: variable FSNAME cannot be greater than 8 symbols, example:"
+            >&2 echo "       LUSTRE_FSNAME=lustre1"
+            exit 1
         fi
 
         NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json | jq -r '.items[].metadata.name')"

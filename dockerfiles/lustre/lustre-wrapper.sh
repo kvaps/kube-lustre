@@ -31,7 +31,7 @@ case "$TYPE" in
     ;;
     * )
         >&2 echo "Error: variable TYPE is unspecified, or specified wrong"
-        >&2 echo "       TYPE=<mgs|mdt|ost|mdt+mgs>"
+        >&2 echo "       TYPE=<mgs|mdt|ost|mdt-mgs>"
         exit 1
     ;;
 esac
