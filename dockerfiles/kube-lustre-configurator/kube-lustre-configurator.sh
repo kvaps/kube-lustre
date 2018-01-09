@@ -1,4 +1,8 @@
 #!/bin/sh
+# set -e
+
+CONFIGURATIONS_FILE="configuration.json"
+DAEMONS_FILE="daemons.json"
 
 load_variables() {
     NODE1_NAME="$(jq -r ".$CONFIGURATION[\"$DAEMON\"][0]" "$DAEMONS_FILE")"
@@ -15,26 +19,31 @@ load_variables() {
     DRBD_INSTALL="$(jq -r ".$CONFIGURATION.drbd.install" "$CONFIGURATIONS_FILE")"
     DRBD_DEVICE="$(jq -r ".$CONFIGURATION.drbd.device" "$CONFIGURATIONS_FILE")"
     DRBD_NODE1_PORT="$(jq -r ".$CONFIGURATION.drbd.port[0]" "$CONFIGURATIONS_FILE")"
-    DRBD_NODE1_PORT="$(jq -r ".$CONFIGURATION.drbd.port[1]" "$CONFIGURATIONS_FILE")"
+    DRBD_NODE2_PORT="$(jq -r ".$CONFIGURATION.drbd.port[1]" "$CONFIGURATIONS_FILE")"
     DRBD_NODE1_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[0]" "$CONFIGURATIONS_FILE")"
     DRBD_NODE2_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[1]" "$CONFIGURATIONS_FILE")"
     NODE_LABEL="$LUSTRE_FSNAME/$DAEMON="
     APP_NAME="$LUSTRE_FSNAME-$DAEMON"
+    LUSTRE_TYPE="$(echo "$DAEMON" | sed 's/[0-9]//g')"
+
+    if [ "$DRBD" == "true" ]; then
+        kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
+        LUSTRE_HA_BACKEND="drbd"
+        LUSTRE_SERVICENODE="${NODE1_IP},${NODE2_IP}"
+    fi
 }
 
-CONFIGURATIONS_FILE="configuration.json"
-DAEMONS_FILE="daemons.json"
-CONFIGURATIONS="$(jq -r '. | keys[]' "$DAEMONS_FILE")"
-
-if [ -f "$CONFIGURATIONS_FILE" ]; then
+if [ ! -f "$CONFIGURATIONS_FILE" ]; then
     >&2 echo "Error: Configurations file not found: $CONFIGURATIONS_FILE"
     exit 1
 fi
 
-if [ -f "$DAEMONS_FILE" ]; then
+if [ ! -f "$DAEMONS_FILE" ]; then
     >&2 echo "Error: Daemons file not found: $DAEMONS_FILE"
     exit 1
 fi
+
+CONFIGURATIONS="$(jq -r '. | keys[]' "$DAEMONS_FILE")"
 
 # Checking configuration
 for CONFIGURATION in $CONFIGURATIONS; do
@@ -73,9 +82,14 @@ for CONFIGURATION in $CONFIGURATIONS; do
         fi
 
         NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json | jq -r '.items[].metadata.name')"
-        WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1}\|${NODE2}\)$")"
+        if [ "$DRBD" == "true" ]; then
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1}\|${NODE2}\)$")"
+        else
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^${NODE1}$")"
+        fi
+
         if [ -z "$WRONG_NODES" ]; then
-            >&2 echo "Error: Wrong nodes nodes found with label $NODE_LABEL:"
+            >&2 echo "Error: Wrong nodes nodes was found with label $NODE_LABEL:"
             >&2 echo "     " $WRONG_NODES
             exit 1
         fi
@@ -92,7 +106,9 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         # label nodes
         kubectl label node --overwrite "$NODE1" "$NODE_LABEL"
-        kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
+        if [ "$DRBD" == "true" ]; then
+            kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
+        fi
 
         # apply drbd resources
         if [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "true" ]; then

@@ -24,7 +24,7 @@ case "$TYPE" in
         POOL="${POOL:-$FSNAME-mds}"
         NAME="${NAME:-mgs}"
     ;;
-    mdt+mgs|mgs+mdt )
+    mdt-mgs )
         TYPE_CMD="--mdt --mgs"
         POOL="${POOL:-$FSNAME-mdt${INDEX}}"
         NAME="${NAME:-mdt${INDEX}}"
@@ -57,7 +57,7 @@ fi
 if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] ); then
     if [ -z "$MGSNODE" ]; then
         >&2 echo "Error: variable MGSNODE is not specified, example:"
-        >&2 echo "       SERVICENODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
+        >&2 echo "       MGSNODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
         exit 1
     else
         MGSNODE_CMD="--mgsnode=$MGSNODE"

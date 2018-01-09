@@ -1,10 +1,10 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: StatefulSet
 metadata:
-  name: ${APP_NAME}-drbd
+  name: ${APP_NAME}-zfs
   namespace: lustre
   labels:
-      app: ${APP_NAME}-drbd
+      app: ${APP_NAME}-zfs
 spec:
   selector:
     matchLabels:
@@ -12,10 +12,10 @@ spec:
   template:
     metadata:
       labels:
-        name: ${APP_NAME}-drbd
+        name: ${APP_NAME}-zfs
     spec:
       initContainers:
-      - name: drbd-install
+      - name: lustre-install
         image: kvaps/drbd-install
         env:
         - name: CHROOT
@@ -24,33 +24,27 @@ spec:
         - name: host-path
           mountPath: /host-path
       containers:
-      - name: ${APP_NAME}-drbd
-        image: kvaps/drbd
+      - name: ${APP_NAME}-zfs
+        image: kvaps/lustre
         securityContext:
           privileged: true
         env:
         - name: CHROOT
           value: /host-root
+        - name: HA_BACKEND
+          value: ${LUSTRE_HA_BACKEND}
         - name: RESOURCE_NAME
           value: ${APP_NAME}
         - name: DEVICE
-          value: ${DRBD_DEVICE}
-        - name: NODE1_NAME
-          value: ${NODE1_NAME}
-        - name: NODE1_IP
-          value: ${NODE1_IP}
-        - name: NODE1_DISK
-          value: ${DRBD_NODE1_DISK}
-        - name: NODE1_PORT
-          value: ${DRBD_NODE1_PORT}
-        - name: NODE2_NAME
-          value: ${NODE2_NAME}
-        - name: NODE2_IP
-          value: ${NODE2_IP}
-        - name: NODE2_DISK
-          value: ${DRBD_NODE2_DISK}
-        - name: NODE2_PORT
-          value: ${DRBD_NODE2_PORT}
+          value: ${LUSTRE_DEVICE}
+        - name: FSNAME
+          value: ${LUSTRE_FSNAME}
+        - name: TYPE
+          value: ${LUSTRE_TYPE}
+        - name: MGSNODE
+          value: ${LUSTRE_MGSNODE}
+        - name: SERVICENODE
+          value: ${LUSTRE_SERVICENODE}
         volumeMounts:
         - name: host-path
           mountPath: /host-path
