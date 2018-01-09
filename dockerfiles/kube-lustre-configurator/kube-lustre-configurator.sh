@@ -44,6 +44,9 @@ if [ ! -f "$DAEMONS_FILE" ]; then
     exit 1
 fi
 
+# Check kubectl
+kubectl get nodes 1> /dev/null
+
 CONFIGURATIONS="$(jq -r '. | keys[]' "$DAEMONS_FILE")"
 
 # Checking configuration
