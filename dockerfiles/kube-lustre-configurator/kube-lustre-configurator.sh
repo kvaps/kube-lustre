@@ -132,19 +132,19 @@ for CONFIGURATION in $CONFIGURATIONS; do
             kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
         fi
 
-        # apply drbd resources
-        if [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "true" ]; then
-            eval "echo \"$(cat drbd.yaml)\"" | kubectl apply -f -
-        elif [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "false" ]; then
-            eval "echo \"$(cat drbd.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
-        fi
+        ## apply drbd resources
+        #if [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "true" ]; then
+        #    eval "echo \"$(cat drbd.yaml)\"" | kubectl apply -f -
+        #elif [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "false" ]; then
+        #    eval "echo \"$(cat drbd.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+        #fi
 
-        # apply lustre resources
-        if [ "$LUSTRE_INSTALL" == "true" ]; then
-            eval "echo \"$(cat lustre.yaml)\"" | kubectl apply -f -
-        elif [ "$LUSTRE_INSTALL" == "false" ]; then
-            eval "echo \"$(cat lustre.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
-        fi
+        ## apply lustre resources
+        #if [ "$LUSTRE_INSTALL" == "true" ]; then
+        #    eval "echo \"$(cat lustre.yaml)\"" | kubectl apply -f -
+        #elif [ "$LUSTRE_INSTALL" == "false" ]; then
+        #    eval "echo \"$(cat lustre.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+        #fi
 
     done
 done
