@@ -39,6 +39,8 @@ spec:
           value: ${LUSTRE_DEVICE}
         - name: FSNAME
           value: ${LUSTRE_FSNAME}
+        - name: INDEX
+          value: ${LUSTRE_INDEX}
         - name: TYPE
           value: ${LUSTRE_TYPE}
         - name: MGSNODE

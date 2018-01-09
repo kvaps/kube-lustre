@@ -25,6 +25,7 @@ load_variables() {
     NODE_LABEL="$LUSTRE_FSNAME/$DAEMON="
     APP_NAME="$LUSTRE_FSNAME-$DAEMON"
     LUSTRE_TYPE="$(echo "$DAEMON" | sed 's/[0-9]//g')"
+    LUSTRE_INDEX="$(echo "$DAEMON" | sed 's/[^0-9]//g')"
 
     if [ "$DRBD" == "true" ]; then
         kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
@@ -65,7 +66,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
             exit 1
         fi
 
-        for i in NODE1_NAME NODE1_IP LUSTRE_FSNAME LUSTRE_INSTALL LUSTRE_MGSNODE LUSTRE_DEVICE; do
+        for i in NODE1_NAME NODE1_IP LUSTRE_FSNAME LUSTRE_INSTALL LUSTRE_MGSNODE LUSTRE_DEVICE LUSTRE_INDEX; do
             if [ "$(eval "echo \"\$$i"\")" == "null" ]; then
                 >&2 echo "Error: variable $i is not specified for $DAEMON"
                 exit 1
