@@ -149,9 +149,9 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         # apply lustre resources
         if [ "$LUSTRE_INSTALL" == "true" ]; then
-            eval "echo \"$(cat lustre.yaml)\"" | kubectl apply -f -
+            eval "echo \"$(cat lustre.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
         elif [ "$LUSTRE_INSTALL" == "false" ]; then
-            eval "echo \"$(cat lustre.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+            eval "echo \"$(cat lustre.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
         fi
 
     done
