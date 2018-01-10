@@ -66,10 +66,10 @@ for CONFIGURATION in $CONFIGURATIONS; do
             exit 1
         fi
 
-        if [ "$DRBD" == "true" ] && [ "$NODE3_NAME" != "null"]; then
+        if [ "$DRBD" == "true" ] && [ "$NODE3_NAME" != "null" ]; then
             >&2 echo "Error: Only two nodes alowed for drbd configuration for $DAEMON"
             exit 1
-        elif [ "$DRBD" == "false" ] && [ "$NODE2_NAME" != "null"]; then
+        elif [ "$DRBD" == "false" ] && [ "$NODE2_NAME" != "null" ]; then
             >&2 echo "Error: Only one node alowed for configuration without drbd for $DAEMON"
             exit 1
         fi
@@ -110,9 +110,9 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json 2>/dev/null | jq -r '.items[].metadata.name' )"
         if [ "$DRBD" == "true" ]; then
-            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1_NAME}\|${NODE2_NAME}\)$")"
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1_NAME}\|${NODE2_NAME}\)$" || true)"
         else
-            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^${NODE1_NAME}$")"
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^${NODE1_NAME}$" || true)"
         fi
 
         if [ ! -z "$WRONG_NODES" ]; then
@@ -133,8 +133,10 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         # label nodes
         kubectl label node --overwrite "$NODE1_NAME" "$NODE_LABEL"
+        kubectl label node --overwrite "$NODE1_NAME" "$LUSTRE_FSNAME="
         if [ "$DRBD" == "true" ]; then
             kubectl label node --overwrite "$NODE2_NAME" "$NODE_LABEL"
+            kubectl label node --overwrite "$NODE2_NAME" "$LUSTRE_FSNAME="
         fi
 
         ## apply drbd resources
