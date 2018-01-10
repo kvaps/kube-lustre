@@ -39,8 +39,6 @@ case "$TYPE" in
     ;;
 esac
 
-MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
-
 if [ "${#FSNAME}" -gt "8" ]; then
     >&2 echo "Error: variable FSNAME cannot be greater than 8 symbols, example:"
     >&2 echo "       FSNAME=lustre1"
@@ -112,7 +110,8 @@ if [ "$HA_BACKEND" == "drbd" ]; then
 fi
 
 # Create mount target
-mkdir -p "$MOUNT_TARGET"
+MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
+mkdir -p "$CHROOT/$MOUNT_TARGET"
 
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
@@ -130,9 +129,12 @@ if ! $WIPEFS "$DEVICE" | grep -q "."; then
     # Prepare drive
     $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs --force-nohostid "$POOL/$NAME" "$DEVICE"
 else
-    # Start daemon
+    # Import zfs-pool
     $ZPOOL import -o cachefile=none "$POOL"
 fi
+
+# Start daemon
+$MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET"
 
 # Sleep calm
 tail -f /dev/null & wait $!
