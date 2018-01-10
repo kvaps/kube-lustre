@@ -108,7 +108,7 @@ $MODPROBE lustre
 
 # Check for drbd resource
 if [ "$HA_BACKEND" == "drbd" ]; then
-    $DRBDADM status "$RESOURCE_NAME"
+    $DRBDADM status "$RESOURCE_NAME" 1>/dev/null
 fi
 
 # Create mount target
@@ -117,9 +117,9 @@ mkdir -p "$CHROOT/$MOUNT_TARGET"
 
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
-    trap "$UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
+    trap "set +e; $UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
 else
-    trap "$UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
+    trap "set +e; $UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
 fi
 
 # Enable drbd primary
