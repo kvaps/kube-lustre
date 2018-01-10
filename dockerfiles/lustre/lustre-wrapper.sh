@@ -88,6 +88,7 @@ if [ ! -z "$CHROOT" ]; then
     MODPROBE="chroot $CHROOT modprobe"
     ZPOOL="chroot $CHROOT zpool"
     MOUNT="chroot $CHROOT mount"
+    MOUNTPOINT="chroot $CHROOT mountpoint"
     UMOUNT="chroot $CHROOT umount"
     MKFS_LUSTRE="chroot $CHROOT mkfs.lustre"
 else
@@ -96,6 +97,7 @@ else
     MODPROBE="modprobe"
     ZPOOL="zpool"
     MOUNT="mount"
+    MOUNTPOINT="mountpoint"
     UMOUNT="umount"
     MKFS_LUSTRE="mkfs.lustre"
 fi
@@ -130,11 +132,15 @@ if ! $WIPEFS "$DEVICE" | grep -q "."; then
     $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs --force-nohostid "$POOL/$NAME" "$DEVICE"
 else
     # Import zfs-pool
-    $ZPOOL import -o cachefile=none "$POOL"
+    if ! $ZPOOL list | grep -q "^$POOL "; then
+        $ZPOOL import -o cachefile=none "$POOL"
+    fi
 fi
 
 # Start daemon
-$MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET"
+if ! $MOUNTPOINT -q "$MOUNT_TARGET"; then
+    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET"
+fi
 
 # Sleep calm
 tail -f /dev/null & wait $!
