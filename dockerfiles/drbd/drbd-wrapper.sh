@@ -82,4 +82,4 @@ then
 fi
 
 # Sleep calm
-tail -f /dev/null
+tail -f /dev/null & wait $!
