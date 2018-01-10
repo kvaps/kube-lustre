@@ -1,8 +1,15 @@
 #!/bin/sh
-# set -e
+set -e
 
-CONFIGURATIONS_FILE="configuration.json"
-DAEMONS_FILE="daemons.json"
+CONFIG_DIR="${CONFIG_DIR:-/etc/kube-lustre}"
+CONFIGURATIONS_FILE="$CONFIG_DIR/configuration.json"
+DAEMONS_FILE="$CONFIG_DIR/daemons.json"
+
+echo "Parsing $CONFIGURATIONS_FILE"
+jq . "$CONFIGURATIONS_FILE"
+
+echo "Parsing $DAEMONS_FILE"
+jq . "$DAEMONS_FILE"
 
 load_variables() {
     NODE1_NAME="$(jq -r ".$CONFIGURATION[\"$DAEMON\"][0]" "$DAEMONS_FILE")"
@@ -18,8 +25,7 @@ load_variables() {
     DRBD="$(jq -r ".$CONFIGURATION | keys | contains([\"drbd\"])" "$CONFIGURATIONS_FILE")"
     DRBD_INSTALL="$(jq -r ".$CONFIGURATION.drbd.install" "$CONFIGURATIONS_FILE")"
     DRBD_DEVICE="$(jq -r ".$CONFIGURATION.drbd.device" "$CONFIGURATIONS_FILE")"
-    DRBD_NODE1_PORT="$(jq -r ".$CONFIGURATION.drbd.port[0]" "$CONFIGURATIONS_FILE")"
-    DRBD_NODE2_PORT="$(jq -r ".$CONFIGURATION.drbd.port[1]" "$CONFIGURATIONS_FILE")"
+    DRBD_PORT="$(jq -r ".$CONFIGURATION.drbd.port" "$CONFIGURATIONS_FILE")"
     DRBD_NODE1_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[0]" "$CONFIGURATIONS_FILE")"
     DRBD_NODE2_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[1]" "$CONFIGURATIONS_FILE")"
     NODE_LABEL="$LUSTRE_FSNAME/$DAEMON="
@@ -28,7 +34,6 @@ load_variables() {
     LUSTRE_INDEX="$(echo "$DAEMON" | sed 's/[^0-9]//g')"
 
     if [ "$DRBD" == "true" ]; then
-        kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
         LUSTRE_HA_BACKEND="drbd"
         LUSTRE_SERVICENODE="${NODE1_IP},${NODE2_IP}"
     fi
@@ -77,7 +82,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
         done
 
         if [ "$DRBD" == "true" ]; then
-            for i in NODE2_NAME NODE2_IP DRBD_INSTALL DRBD_DEVICE DRBD_NODE1_PORT DRBD_NODE1_PORT DRBD_NODE2_PORT DRBD_NODE1_DISK DRBD_NODE2_DISK; do
+            for i in NODE2_NAME NODE2_IP DRBD_INSTALL DRBD_DEVICE DRBD_PORT  DRBD_NODE1_DISK DRBD_NODE2_DISK; do
                 if [ "$(eval "echo \"\$$i"\")" == "null" ]; then
                     >&2 echo "Error: variable $i is not specified for $DAEMON"
                     exit 1
@@ -103,14 +108,14 @@ for CONFIGURATION in $CONFIGURATIONS; do
             exit 1
         fi
 
-        NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json | jq -r '.items[].metadata.name')"
+        NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json 2>/dev/null | jq -r '.items[].metadata.name' )"
         if [ "$DRBD" == "true" ]; then
-            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1}\|${NODE2}\)$")"
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1_NAME}\|${NODE2_NAME}\)$")"
         else
-            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^${NODE1}$")"
+            WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^${NODE1_NAME}$")"
         fi
 
-        if [ -z "$WRONG_NODES" ]; then
+        if [ ! -z "$WRONG_NODES" ]; then
             >&2 echo "Error: Wrong nodes nodes was found with label $NODE_LABEL:"
             >&2 echo "     " $WRONG_NODES
             exit 1
@@ -127,9 +132,9 @@ for CONFIGURATION in $CONFIGURATIONS; do
         load_variables
 
         # label nodes
-        kubectl label node --overwrite "$NODE1" "$NODE_LABEL"
+        kubectl label node --overwrite "$NODE1_NAME" "$NODE_LABEL"
         if [ "$DRBD" == "true" ]; then
-            kubectl label node --overwrite "$NODE2" "$NODE_LABEL"
+            kubectl label node --overwrite "$NODE2_NAME" "$NODE_LABEL"
         fi
 
         ## apply drbd resources

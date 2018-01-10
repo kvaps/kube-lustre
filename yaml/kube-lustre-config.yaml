@@ -1,31 +1,31 @@
 kind: ConfigMap
 metadata:
-  name: kube-lustre-conf
-  namespace: lustre
+  name: kube-lustre-config
+  namespace: kube-system
 apiVersion: v1
 data:
-  configuration: |
+  configuration.json: |
     {
       "configuration1": {
         "lustre": {
           "install": true,
-          "mgsnode": "m1c4,m2c4",
+          "mgsnode": "node1,node2",
           "fsname": "lustre1",
           "device": "/dev/drbd0"
         },
         "drbd": {
           "install": true,
           "device": "/dev/drbd0",
-          "disks": ["/dev/sdb", "/dev/sdb"]
+          "port": "7788",
+          "disks": ["/dev/vdb", "/dev/vdb"],
         }
       }
     }
-  daemons: |
+  daemons.json: |
     {
       "configuration1": {
-         "mdt0-mgs": ["m1c4", "m2c4"],
-         "ost0": ["m1c5", "m2c5"],
-         "ost1": ["m1c6", "m2c6"],
-         "ost2": ["m1c7", "m2c7"]
+         "mdt0-mgs": ["node1", "node2"],
+         "ost0": ["node3", "node4"],
+         "ost1": ["node5", "node6"]
       }
     }

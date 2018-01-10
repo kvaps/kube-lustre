@@ -42,7 +42,7 @@ spec:
         - name: NODE1_DISK
           value: ${DRBD_NODE1_DISK}
         - name: NODE1_PORT
-          value: ${DRBD_NODE1_PORT}
+          value: ${DRBD_PORT}
         - name: NODE2_NAME
           value: ${NODE2_NAME}
         - name: NODE2_IP
@@ -50,7 +50,7 @@ spec:
         - name: NODE2_DISK
           value: ${DRBD_NODE2_DISK}
         - name: NODE2_PORT
-          value: ${DRBD_NODE2_PORT}
+          value: ${DRBD_PORT}
         volumeMounts:
         - name: host-path
           mountPath: /host-path
