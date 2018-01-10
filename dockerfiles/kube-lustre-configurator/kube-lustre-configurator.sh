@@ -142,9 +142,9 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         # apply drbd resources
         if [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "true" ]; then
-            eval "echo \"$(cat drbd.yaml)\"" | kubectl apply -f -
+            eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
         elif [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "false" ]; then
-            eval "echo \"$(cat drbd.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+            eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
         fi
 
         ## apply lustre resources
