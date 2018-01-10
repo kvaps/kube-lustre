@@ -117,7 +117,7 @@ mkdir -p "$CHROOT/$MOUNT_TARGET"
 
 cleanup() {
     set +e
-    kill $! 2>/dev/null
+    kill -SIGINT $! 2>/dev/null && wait $!
     $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
     $ZPOOL list "$POOL" 2>/dev/null && $ZPOOL export -f "$POOL"
     [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
