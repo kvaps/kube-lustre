@@ -9,6 +9,8 @@ spec:
   selector:
     matchLabels:
       name: ${APP_NAME}
+  serviceName: ${APP_NAME}
+  replicas: 1
   template:
     metadata:
       labels:
