@@ -9,6 +9,8 @@ for i in FSNAME DEVICE; do
     fi
 done
 
+MOUNT_DIR=${MOUNT_DIR:-/var/lib/lustre}
+
 case "$TYPE" in
     ost )
         TYPE_CMD="--ost"
@@ -36,6 +38,8 @@ case "$TYPE" in
         exit 1
     ;;
 esac
+
+MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
 
 if [ "${#FSNAME}" -gt "8" ]; then
     >&2 echo "Error: variable FSNAME cannot be greater than 8 symbols, example:"
@@ -85,12 +89,16 @@ if [ ! -z "$CHROOT" ]; then
     WIPEFS="chroot $CHROOT wipefs"
     MODPROBE="chroot $CHROOT modprobe"
     ZPOOL="chroot $CHROOT zpool"
+    MOUNT="chroot $CHROOT mount"
+    UMOUNT="chroot $CHROOT umount"
     MKFS_LUSTRE="chroot $CHROOT mkfs.lustre"
 else
     DRBDADM="drbdadm"
     WIPEFS="wipefs"
     MODPROBE="modprobe"
     ZPOOL="zpool"
+    MOUNT="mount"
+    UMOUNT="umount"
     MKFS_LUSTRE="mkfs.lustre"
 fi
 
@@ -103,11 +111,14 @@ if [ "$HA_BACKEND" == "drbd" ]; then
     $DRBDADM status "$RESOURCE_NAME"
 fi
 
+# Create mount target
+mkdir -p "$MOUNT_TARGET"
+
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
-    trap "$ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'" SIGINT SIGHUP SIGTERM EXIT
+    trap "$UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
 else
-    trap "$ZPOOL export -f '$POOL'" SIGINT SIGHUP SIGTERM EXIT
+    trap "$UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
 fi
 
 # Enable drbd primary
