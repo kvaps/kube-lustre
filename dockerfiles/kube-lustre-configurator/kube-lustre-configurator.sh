@@ -29,7 +29,7 @@ load_variables() {
     DRBD_PORT="$(jq -r ".$CONFIGURATION.drbd.port" "$CONFIGURATIONS_FILE")"
     DRBD_NODE1_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[0]" "$CONFIGURATIONS_FILE")"
     DRBD_NODE2_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[1]" "$CONFIGURATIONS_FILE")"
-    NODE_LABEL="$LUSTRE_FSNAME/$DAEMON="
+    NODE_LABEL="$LUSTRE_FSNAME/$DAEMON"
     APP_NAME="$LUSTRE_FSNAME-$DAEMON"
     LUSTRE_TYPE="$(echo "$DAEMON" | sed 's/[0-9]//g')"
     LUSTRE_INDEX="$(echo "$DAEMON" | sed 's/[^0-9]//g')"
@@ -109,7 +109,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
             exit 1
         fi
 
-        NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL" -o json 2>/dev/null | jq -r '.items[].metadata.name' )"
+        NODES_BY_LABEL="$(kubectl get nodes -l "$NODE_LABEL=" -o json 2>/dev/null | jq -r '.items[].metadata.name' )"
         if [ "$DRBD" == "true" ]; then
             WRONG_NODES="$(echo "$NODES_BY_LABEL" | grep -v "^\(${NODE1_NAME}\|${NODE2_NAME}\)$" || true)"
         else
@@ -133,10 +133,10 @@ for CONFIGURATION in $CONFIGURATIONS; do
         load_variables
 
         # label nodes
-        kubectl label node --overwrite "$NODE1_NAME" "$NODE_LABEL"
+        kubectl label node --overwrite "$NODE1_NAME" "$NODE_LABEL="
         kubectl label node --overwrite "$NODE1_NAME" "$LUSTRE_FSNAME="
         if [ "$DRBD" == "true" ]; then
-            kubectl label node --overwrite "$NODE2_NAME" "$NODE_LABEL"
+            kubectl label node --overwrite "$NODE2_NAME" "$NODE_LABEL="
             kubectl label node --overwrite "$NODE2_NAME" "$LUSTRE_FSNAME="
         fi
 
