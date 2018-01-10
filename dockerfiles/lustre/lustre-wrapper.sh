@@ -27,8 +27,8 @@ case "$TYPE" in
     ;;
     mdt-mgs )
         TYPE_CMD="--mdt --mgs"
-        POOL="${POOL:-$FSNAME-mdt${INDEX}}"
-        NAME="${NAME:-mdt${INDEX}}"
+        POOL="${POOL:-$FSNAME-mdt${INDEX}-mgs}"
+        NAME="${NAME:-mdt${INDEX}-mgs}"
     ;;
     * )
         >&2 echo "Error: variable TYPE is unspecified, or specified wrong"
