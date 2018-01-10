@@ -1,5 +1,7 @@
 #!/bin/sh
+[ ! -z "$DEBUG" ] && set -x
 set -e
+
 
 # default parameters
 [ -z "$KERNEL_VERSION" ] && KERNEL_VERSION="$(uname -r)"

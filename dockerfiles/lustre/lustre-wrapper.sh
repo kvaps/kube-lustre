@@ -1,4 +1,5 @@
 #!/bin/sh
+[ ! -z "$DEBUG" ] && set -x
 set -e
 
 for i in FSNAME DEVICE; do
