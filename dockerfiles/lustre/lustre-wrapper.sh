@@ -119,7 +119,7 @@ cleanup() {
     set +e
     kill -SIGINT $! 2>/dev/null && wait $!
     $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
-    $ZPOOL list "$POOL" 2>/dev/null && $ZPOOL export -f "$POOL"
+    $ZPOOL list "$POOL" &>/dev/null && $ZPOOL export -f "$POOL"
     [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
     rmdir "$MOUNT_TARGET" 2>/dev/null
 }
