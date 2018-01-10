@@ -1,57 +1,58 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: ${APP_NAME}-zfs
+  name: ${APP_NAME}
   namespace: lustre
   labels:
-      app: ${APP_NAME}-zfs
+      app: ${APP_NAME}
 spec:
   selector:
     matchLabels:
-      name: ${NODE_LABEL}
+      name: ${APP_NAME}
   template:
     metadata:
       labels:
-        name: ${APP_NAME}-zfs
+        name: ${APP_NAME}
     spec:
+      hostNetwork: true
       initContainers:
       - name: lustre-install
-        image: kvaps/drbd-install
+        image: kvaps/lustre-install
         env:
         - name: CHROOT
-          value: /host-root
+          value: "/host-root"
         volumeMounts:
-        - name: host-path
-          mountPath: /host-path
+        - name: host-root
+          mountPath: "/host-root"
       containers:
-      - name: ${APP_NAME}-zfs
+      - name: ${APP_NAME}
         image: kvaps/lustre
         securityContext:
           privileged: true
         env:
         - name: CHROOT
-          value: /host-root
+          value: "/host-root"
         - name: HA_BACKEND
-          value: ${LUSTRE_HA_BACKEND}
+          value: "${LUSTRE_HA_BACKEND}"
         - name: RESOURCE_NAME
-          value: ${APP_NAME}
+          value: "${APP_NAME}"
         - name: DEVICE
-          value: ${LUSTRE_DEVICE}
+          value: "${LUSTRE_DEVICE}"
         - name: FSNAME
-          value: ${LUSTRE_FSNAME}
+          value: "${LUSTRE_FSNAME}"
         - name: INDEX
-          value: ${LUSTRE_INDEX}
+          value: "${LUSTRE_INDEX}"
         - name: TYPE
-          value: ${LUSTRE_TYPE}
+          value: "${LUSTRE_TYPE}"
         - name: MGSNODE
-          value: ${LUSTRE_MGSNODE}
+          value: "${LUSTRE_MGSNODE}"
         - name: SERVICENODE
-          value: ${LUSTRE_SERVICENODE}
+          value: "${LUSTRE_SERVICENODE}"
         volumeMounts:
-        - name: host-path
-          mountPath: /host-path
+        - name: host-root
+          mountPath: /host-root
       terminationGracePeriodSeconds: 10
       volumes:
-      - name: host-path
+      - name: host-root
         hostPath:
           path: /

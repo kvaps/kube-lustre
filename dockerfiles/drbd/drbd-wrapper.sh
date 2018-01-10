@@ -44,7 +44,7 @@ fi
 
 # Write config
 rm -f "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
-eval "echo \"$(cat template.res)\"" > "$CHROOT/tmp/$RESOURCE_NAME.res"
+eval "echo \"$(cat template.res | sed 's/"/\\"/g')\"" > "$CHROOT/tmp/$RESOURCE_NAME.res"
 $DRBDADM sh-nop -t "/tmp/$RESOURCE_NAME.res"
 mv "$CHROOT/tmp/$RESOURCE_NAME.res" "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
 

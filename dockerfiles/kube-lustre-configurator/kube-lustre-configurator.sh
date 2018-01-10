@@ -76,7 +76,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
         fi
 
         for i in NODE1_NAME NODE1_IP LUSTRE_FSNAME LUSTRE_INSTALL LUSTRE_MGSNODE LUSTRE_DEVICE LUSTRE_TYPE LUSTRE_INDEX; do
-            if [ "$(eval "echo \"\$$i"\")" == "null" ]; then
+            if [ -z "$(eval "echo \"\$$i"\")" ] || [ "$(eval "echo \"\$$i"\")" == "null" ]; then
                 >&2 echo "Error: variable $i is not specified for $DAEMON"
                 exit 1
             fi
@@ -84,7 +84,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         if [ "$DRBD" == "true" ]; then
             for i in NODE2_NAME NODE2_IP DRBD_INSTALL DRBD_DEVICE DRBD_PORT  DRBD_NODE1_DISK DRBD_NODE2_DISK; do
-                if [ "$(eval "echo \"\$$i"\")" == "null" ]; then
+                if [ -z "$(eval "echo \"\$$i"\")" ] || [ "$(eval "echo \"\$$i"\")" == "null" ]; then
                     >&2 echo "Error: variable $i is not specified for $DAEMON"
                     exit 1
                 fi
@@ -147,12 +147,12 @@ for CONFIGURATION in $CONFIGURATIONS; do
             eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
         fi
 
-        ## apply lustre resources
-        #if [ "$LUSTRE_INSTALL" == "true" ]; then
-        #    eval "echo \"$(cat lustre.yaml)\"" | kubectl apply -f -
-        #elif [ "$LUSTRE_INSTALL" == "false" ]; then
-        #    eval "echo \"$(cat lustre.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
-        #fi
+        # apply lustre resources
+        if [ "$LUSTRE_INSTALL" == "true" ]; then
+            eval "echo \"$(cat lustre.yaml)\"" | kubectl apply -f -
+        elif [ "$LUSTRE_INSTALL" == "false" ]; then
+            eval "echo \"$(cat lustre.yaml)\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+        fi
 
     done
 done
