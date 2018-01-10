@@ -115,12 +115,17 @@ fi
 MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
 mkdir -p "$CHROOT/$MOUNT_TARGET"
 
+cleanup() {
+    set +e
+    kill $! 2>/dev/null
+    $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
+    $ZPOOL list "$POOL" 2>/dev/null && $ZPOOL export -f "$POOL"
+    [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
+    rmdir "$MOUNT_TARGET" 2>/dev/null
+}
+
 # Set exit trap
-if [ "$HA_BACKEND" == "drbd" ]; then
-    trap "set +e; $UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
-else
-    trap "set +e; $UMOUNT -f '$MOUNT_TARGET'; $ZPOOL export -f '$POOL'; rmdir '$MOUNT_TARGET'" SIGINT SIGHUP SIGTERM EXIT
-fi
+trap cleanup SIGINT SIGHUP SIGTERM EXIT
 
 # Enable drbd primary
 if [ "$HA_BACKEND" == "drbd" ]; then
@@ -133,13 +138,13 @@ if ! $WIPEFS "$DEVICE" | grep -q "."; then
 else
     # Import zfs-pool
     if ! $ZPOOL list | grep -q "^$POOL "; then
-        $ZPOOL import -o cachefile=none "$POOL"
+        $ZPOOL import -o cachefile=none "$POOL" & wait $!
     fi
 fi
 
 # Start daemon
 if ! $MOUNTPOINT -q "$MOUNT_TARGET"; then
-    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET"
+    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET" & wait $!
 fi
 
 # Sleep calm
