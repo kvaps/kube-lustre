@@ -105,9 +105,9 @@ fi
 
 # Set exit trap
 if [ "$HA_BACKEND" == "drbd" ]; then
-    trap "($ZPOOL export -f \"$POOL\"; $DRBDADM secondary \"$RESOURCE_NAME\") && exit 0 || exit 1" SIGINT SIGHUP SIGTERM EXIT
+    trap "$ZPOOL export -f '$POOL'; $DRBDADM secondary '$RESOURCE_NAME'" SIGINT SIGHUP SIGTERM EXIT
 else
-    trap "$ZPOOL export -f \"$POOL\" && exit 0 || exit 1" SIGINT SIGHUP SIGTERM EXIT
+    trap "$ZPOOL export -f '$POOL'" SIGINT SIGHUP SIGTERM EXIT
 fi
 
 # Enable drbd primary
