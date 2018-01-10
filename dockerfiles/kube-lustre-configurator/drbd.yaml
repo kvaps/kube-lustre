@@ -30,6 +30,8 @@ spec:
       containers:
       - name: ${APP_NAME}-drbd
         image: kvaps/drbd
+        stdin: true
+        tty: true
         securityContext:
           privileged: true
         env:

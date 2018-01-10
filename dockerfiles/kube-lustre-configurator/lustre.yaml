@@ -30,6 +30,8 @@ spec:
           mountPath: "/host-root"
       containers:
       - name: ${APP_NAME}
+        stdin: true
+        tty: true
         image: kvaps/lustre
         securityContext:
           privileged: true
