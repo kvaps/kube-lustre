@@ -157,5 +157,5 @@ fi
 
 # Sleep calm
 tail -f /dev/null &
-SLEEP_PID=$!
+TAILF_PID=$!
 wait $TAILF_PID
