@@ -87,18 +87,14 @@ if [ ! -z "$CHROOT" ]; then
     WIPEFS="chroot $CHROOT wipefs"
     MODPROBE="chroot $CHROOT modprobe"
     ZPOOL="chroot $CHROOT zpool"
-    MOUNT="chroot $CHROOT mount"
-    MOUNTPOINT="chroot $CHROOT mountpoint"
-    UMOUNT="chroot $CHROOT umount"
+    SYSTEMCTL="chroot $CHROOT systemctl"
     MKFS_LUSTRE="chroot $CHROOT mkfs.lustre"
 else
     DRBDADM="drbdadm"
     WIPEFS="wipefs"
     MODPROBE="modprobe"
     ZPOOL="zpool"
-    MOUNT="mount"
-    MOUNTPOINT="mountpoint"
-    UMOUNT="umount"
+    SYSTEMCTL="systemctl"
     MKFS_LUSTRE="mkfs.lustre"
 fi
 
@@ -113,7 +109,8 @@ fi
 
 # Create mount target
 MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
-mkdir -p "$CHROOT/$MOUNT_TARGET"
+SYSTEMD_UNIT="$(echo $MOUNT_TARGET | cut -c2- | tr '/' '-').mount"
+SYSTEMD_UNIT_FILE="$CHROOT/run/systemd/system/$SYSTEMD_UNIT"
 
 cleanup() {
     set +e
@@ -126,7 +123,8 @@ cleanup() {
     kill -SIGINT $ZPOOL_PID 2>/dev/null && wait $ZPOOL_PID
 
     # umount lustre target if mounted
-    $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
+    $SYSTEMCTL stop "$SYSTEMD_UNIT" && rm -f "$SYSTEMD_UNIT_FILE"
+
     # export zpool if imported
     $ZPOOL list "$POOL" &>/dev/null && $ZPOOL export -f "$POOL"
     # mark secondary if drbd backend
@@ -157,12 +155,18 @@ else
     fi
 fi
 
+# Write unit
+cat > "$SYSTEMD_UNIT_FILE" <<EOT
+[Mount]
+What=$POOL/$NAME
+Where=$MOUNT_TARGET
+Type=lustre
+EOT
+
 # Start daemon
-if ! $MOUNTPOINT -q "$MOUNT_TARGET"; then
-    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET" & 
-    MOUNT_PID=$!
-    wait $MOUNT_PID
-fi
+$SYSTEMCTL start "$SYSTEMD_UNIT" &
+MOUNT_PID=$!
+wait $MOUNT_PID
 
 # Sleep calm
 tail -f /dev/null &
