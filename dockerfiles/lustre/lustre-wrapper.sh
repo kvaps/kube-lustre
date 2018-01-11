@@ -117,7 +117,11 @@ mkdir -p "$CHROOT/$MOUNT_TARGET"
 
 cleanup() {
     set +e
-    kill -SIGINT $! 2>/dev/null && wait $!
+
+    kill $TAILF_PID 2>/dev/null
+    kill -SIGINT $MOUNT_PID 2>/dev/null && wait $MOUNT_PID
+    kill -SIGINT $ZPOOL_PID 2>/dev/null && wait $ZPOOL_PID
+
     $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
     $ZPOOL list "$POOL" &>/dev/null && $ZPOOL export -f "$POOL"
     [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
@@ -138,14 +142,20 @@ if ! $WIPEFS "$DEVICE" | grep -q "."; then
 else
     # Import zfs-pool
     if ! $ZPOOL list | grep -q "^$POOL "; then
-        $ZPOOL import -o cachefile=none "$POOL" & wait $!
+        $ZPOOL import -o cachefile=none "$POOL" &
+        ZPOOL_PID=$!
+        wait $ZPOOL_PID
     fi
 fi
 
 # Start daemon
 if ! $MOUNTPOINT -q "$MOUNT_TARGET"; then
-    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET" & wait $!
+    $MOUNT -t lustre "$POOL/$NAME" "$MOUNT_TARGET" & 
+    MOUNT_PID=$!
+    wait $MOUNT_PID
 fi
 
 # Sleep calm
-tail -f /dev/null & wait $!
+tail -f /dev/null &
+SLEEP_PID=$!
+wait $TAILF_PID
