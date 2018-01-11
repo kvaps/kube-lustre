@@ -11,7 +11,8 @@ data:
           "install": true,
           "mgsnode": "node1:node2",
           "fsname": "lustre1",
-          "device": "/dev/drbd0"
+          "device": "/dev/drbd0",
+          "mountpoint": "/stor/lustre1"
         },
         "drbd": {
           "install": true,
@@ -28,4 +29,15 @@ data:
          "ost0": ["node3", "node4"],
          "ost1": ["node5", "node6"]
       }
+    }
+  clients.json: |
+    {
+      "configuration1": [
+         "node1",
+         "node2",
+         "node3",
+         "node4",
+         "node5",
+         "node6"
+      ]
     }

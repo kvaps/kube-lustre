@@ -9,13 +9,20 @@ spec:
     spec:
       hostNetwork: true
       containers:
-        - name: kube-lustre-configurator
-          image: kvaps/kube-lustre-configurator
-          volumeMounts:
-          - name: config
-            mountPath: /etc/kube-lustre
-      volumes:
+      - name: kube-lustre-configurator
+        image: kvaps/kube-lustre-configurator
+        env:
+        - name: CONFIGURE_SERVERS
+          value: "1"
+        - name: CONFIGURE_CLIENTS
+          value: "0"
+        - name: DEBUG
+          value: "0"
+        volumeMounts:
         - name: config
-          configMap:
-            name: kube-lustre-config
+          mountPath: /etc/kube-lustre
+      volumes:
+      - name: config
+        configMap:
+          name: kube-lustre-config
       restartPolicy: Never

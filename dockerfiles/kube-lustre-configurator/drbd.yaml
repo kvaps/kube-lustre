@@ -4,6 +4,8 @@ metadata:
   name: ${APP_NAME}-drbd
   labels:
       app: ${APP_NAME}-drbd
+      ${NODE_LABEL}: ""
+      ${LUSTRE_FSNAME}/server: "drbd"
 spec:
   selector:
     matchLabels:
@@ -12,6 +14,8 @@ spec:
     metadata:
       labels:
         name: ${APP_NAME}-drbd
+        ${NODE_LABEL}: ""
+        ${LUSTRE_FSNAME}/server: "drbd"
     spec:
       hostNetwork: true
       nodeSelector:

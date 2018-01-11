@@ -1,23 +1,19 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: DaemonSet
 metadata:
-  name: ${APP_NAME}
+  name: ${LUSTRE_FSNAME}-client
   labels:
-      app: ${APP_NAME}
-      ${NODE_LABEL}: ""
-      ${LUSTRE_FSNAME}/server: "lustre"
+      app: ${LUSTRE_FSNAME}-client
+      ${LUSTRE_FSNAME}/client: ""
 spec:
   selector:
     matchLabels:
-      name: ${APP_NAME}
-  serviceName: ${APP_NAME}
-  replicas: 1
+      name: ${LUSTRE_FSNAME}-client
   template:
     metadata:
       labels:
-        name: ${APP_NAME}
-        ${NODE_LABEL}: ""
-        ${LUSTRE_FSNAME}/server: "lustre"
+        name: ${LUSTRE_FSNAME}-client
+        ${LUSTRE_FSNAME}/client: ""
     spec:
       hostNetwork: true
       nodeSelector:
@@ -32,33 +28,21 @@ spec:
         - name: host-root
           mountPath: "/host-root"
       containers:
-      - name: ${APP_NAME}
-        image: kvaps/lustre
+      - name: ${LUSTRE_FSNAME}-client
+        image: kvaps/lustre-client
         securityContext:
           privileged: true
         env:
-        - name: KUBE_NOTIFY
-          value: "1"
         - name: DEBUG
           value: "0"
         - name: CHROOT
           value: "/host-root"
-        - name: HA_BACKEND
-          value: "${LUSTRE_HA_BACKEND}"
-        - name: RESOURCE_NAME
-          value: "${APP_NAME}"
-        - name: DEVICE
-          value: "${LUSTRE_DEVICE}"
         - name: FSNAME
           value: "${LUSTRE_FSNAME}"
-        - name: INDEX
-          value: "${LUSTRE_INDEX}"
-        - name: TYPE
-          value: "${LUSTRE_TYPE}"
         - name: MGSNODE
           value: "${LUSTRE_MGSNODE}"
-        - name: SERVICENODE
-          value: "${LUSTRE_SERVICENODE}"
+        - name: MOUNTPOINT
+          value: "${LUSTRE_MOUNTPOINT}"
         volumeMounts:
         - name: host-root
           mountPath: /host-root

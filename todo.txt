@@ -1,2 +1,0 @@
-kubectl create namespace lustre
-kubectl create clusterrolebinding --user system:serviceaccount:lustre:default lustre-cluster-admin --clusterrole cluster-admin
