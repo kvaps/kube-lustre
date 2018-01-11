@@ -9,7 +9,7 @@ data:
       "configuration1": {
         "lustre": {
           "install": true,
-          "mgsnode": "node1,node2",
+          "mgsnode": "node1:node2",
           "fsname": "lustre1",
           "device": "/dev/drbd0"
         },

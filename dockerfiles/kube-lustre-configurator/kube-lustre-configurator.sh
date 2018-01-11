@@ -36,7 +36,7 @@ load_variables() {
 
     if [ "$DRBD" == "true" ]; then
         LUSTRE_HA_BACKEND="drbd"
-        LUSTRE_SERVICENODE="${NODE1_IP},${NODE2_IP}"
+        LUSTRE_SERVICENODE="${NODE1_NAME}:${NODE2_NAME}"
     fi
 }
 
