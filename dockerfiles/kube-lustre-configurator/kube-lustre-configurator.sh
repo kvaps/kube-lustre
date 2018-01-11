@@ -36,28 +36,16 @@ load_variables() {
     fi
 }
 
-if [ -f "$CONFIGURATIONS_FILE" ]; then
-    echo "Parsing $CONFIGURATIONS_FILE"
-    jq . "$CONFIGURATIONS_FILE"
-else
-    >&2 echo "Error: Configurations file not found: $CONFIGURATIONS_FILE"
-    exit 1
-fi
+echo "Parsing $CONFIGURATIONS_FILE"
+jq . "$CONFIGURATIONS_FILE"
 
-if [ "$CONFIGURE_SERVERS" == "1" ] && [ -f "$DAEMONS_FILE" ]; then
+if [ "$CONFIGURE_SERVERS" == "1" ]; then
     echo "Parsing $DAEMONS_FILE"
     jq . "$DAEMONS_FILE"
-elif [ "$CONFIGURE_SERVERS" == "1" ]; then
-    >&2 echo "Error: Daemons file not found: $DAEMONS_FILE"
-    exit 1
 fi
-
-if [ "$CONFIGURE_SERVERS" == "1" ] && [ -f "$CLIENTS_FILE" ]; then
+if [ "$CONFIGURE_CLIENTS" == "1" ]; then
     echo "Parsing $CLIENTS_FILE"
     jq . "$CLIENTS_FILE"
-elif [ "$CONFIGURE_SERVERS" == "1" ]; then
-    >&2 echo "Error: Clients file not found: $CLIENTS_FILE"
-    exit 1
 fi
 
 # Check kubectl
@@ -68,12 +56,10 @@ CONFIGURATIONS="$(jq -r '. | keys[]' "$DAEMONS_FILE")"
 # Checking configuration
 for CONFIGURATION in $CONFIGURATIONS; do
 
-    DAEMONS="$(jq -r ".$CONFIGURATION | keys[]" "$DAEMONS_FILE")"
-    CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
+    [ "$CONFIGURE_SERVERS" == "1" ] && DAEMONS="$(jq -r ".$CONFIGURATION | keys[]" "$DAEMONS_FILE")"
+    [ "$CONFIGURE_CLIENTS" == "1" ] && CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
 
     for DAEMON in $DAEMONS; do
-
-        [ "$CONFIGURE_SERVERS" != "1" ] && break
 
         load_variables
 
@@ -141,8 +127,6 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
     for CLIENT in $CLIENTS; do
 
-        [ "$CONFIGURE_CLIENTS" != "1" ] && break
-
         load_variables
 
         if [ "$LUSTRE" == "false" ]; then
@@ -163,10 +147,11 @@ done
 
 # Run configuration
 for CONFIGURATION in $CONFIGURATIONS; do
-    DAEMONS="$(jq -r ".$CONFIGURATION | keys[]" "$DAEMONS_FILE")"
-    for DAEMON in $DAEMONS; do
 
-        [ "$CONFIGURE_SERVERS" != "1" ] && break
+    [ "$CONFIGURE_SERVERS" == "1" ] && DAEMONS="$(jq -r ".$CONFIGURATION | keys[]" "$DAEMONS_FILE")"
+    [ "$CONFIGURE_CLIENTS" == "1" ] && CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
+
+    for DAEMON in $DAEMONS; do
 
         load_variables
 
@@ -195,8 +180,6 @@ for CONFIGURATION in $CONFIGURATIONS; do
     done
 
     for CLIENT in $CLIENTS; do
-
-        [ "$CONFIGURE_CLIENTS" != "1" ] && break
 
         load_variables
 
