@@ -2,7 +2,7 @@
 
 Lustre Filesystem for Kubernetes
 
-### Build Status
+## Build Status
 
 | Image                             | Build Status                                                                 |
 |-----------------------------------|------------------------------------------------------------------------------|
@@ -18,20 +18,26 @@ Lustre Filesystem for Kubernetes
 [kvaps/drbd]: https://hub.docker.com/r/kvaps/drbd/builds/
 [kvaps/drbd-install]: https://hub.docker.com/r/kvaps/drbd-install/builds/
 
-### How to start
+## Quick Start
 
+Create namespace, and clusterrolebinding:
 ```sh
-# create namespace, and clusterrolebinding
 kubectl create namespace lustre
 kubectl create clusterrolebinding --user system:serviceaccount:lustre:default lustre-cluster-admin --clusterrole cluster-admin
+```
 
-# download and edit your config
+Download and edit config:
+```sh
 curl -O https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-config.yaml
 vim kube-lustre-config.yaml
+```
 
-# apply your configuration
+Apply your config:
+```sh
 kubectl apply -f kube-lustre-config.yaml
+```
 
-# create job for label nodes and run daemons according your configuration
+Create job for label nodes and run daemons according your configuration:
+```sh
 kubectl create -f https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-configurator.yaml
 ```
