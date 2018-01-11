@@ -5,12 +5,7 @@ set -e
 CONFIG_DIR="${CONFIG_DIR:-/etc/kube-lustre}"
 CONFIGURATIONS_FILE="$CONFIG_DIR/configuration.json"
 DAEMONS_FILE="$CONFIG_DIR/daemons.json"
-
-echo "Parsing $CONFIGURATIONS_FILE"
-jq . "$CONFIGURATIONS_FILE"
-
-echo "Parsing $DAEMONS_FILE"
-jq . "$DAEMONS_FILE"
+CLIENTS_FILE="$CONFIG_DIR/clients.json"
 
 load_variables() {
     NODE1_NAME="$(jq -r ".$CONFIGURATION[\"$DAEMON\"][0]" "$DAEMONS_FILE")"
@@ -41,13 +36,27 @@ load_variables() {
     fi
 }
 
-if [ ! -f "$CONFIGURATIONS_FILE" ]; then
+if [ -f "$CONFIGURATIONS_FILE" ]; then
+    echo "Parsing $CONFIGURATIONS_FILE"
+    jq . "$CONFIGURATIONS_FILE"
+else
     >&2 echo "Error: Configurations file not found: $CONFIGURATIONS_FILE"
     exit 1
 fi
 
-if [ ! -f "$DAEMONS_FILE" ]; then
+if [ "$CONFIGURE_SERVERS" == "1" ] && [ -f "$DAEMONS_FILE" ]; then
+    echo "Parsing $DAEMONS_FILE"
+    jq . "$DAEMONS_FILE"
+elif [ "$CONFIGURE_SERVERS" == "1" ]; then
     >&2 echo "Error: Daemons file not found: $DAEMONS_FILE"
+    exit 1
+fi
+
+if [ "$CONFIGURE_SERVERS" == "1" ] && [ -f "$CLIENTS_FILE" ]; then
+    echo "Parsing $CLIENTS_FILE"
+    jq . "$CLIENTS_FILE"
+elif [ "$CONFIGURE_SERVERS" == "1" ]; then
+    >&2 echo "Error: Clients file not found: $CLIENTS_FILE"
     exit 1
 fi
 
