@@ -20,24 +20,24 @@ Lustre Filesystem for Kubernetes
 
 ## Quick Start
 
-Create namespace, and clusterrolebinding:
+* Create namespace, and clusterrolebinding:
 ```sh
 kubectl create namespace lustre
 kubectl create clusterrolebinding --user system:serviceaccount:lustre:default lustre-cluster-admin --clusterrole cluster-admin
 ```
 
-Download and edit config:
+* Download and edit config:
 ```sh
 curl -O https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-config.yaml
 vim kube-lustre-config.yaml
 ```
 
-Apply your config:
+* Apply your config:
 ```sh
 kubectl apply -f kube-lustre-config.yaml
 ```
 
-Create job for label nodes and run daemons according your configuration:
+* Create job for label nodes and run daemons according your configuration:
 ```sh
 kubectl create -f https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-configurator.yaml
 ```
