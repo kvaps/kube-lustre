@@ -134,7 +134,7 @@ cleanup() {
     rmdir "$MOUNT_TARGET" 2>/dev/null
 
     # kill the pod for not wait when Terminating are finished
-    [ "$KUBE_NOTIFY" == "1" ] && kubectl delete pod "$RESOURCE_NAME" --force --grace-period=0
+    [ "$KUBE_NOTIFY" == "1" ] && kubectl delete pod "$RESOURCE_NAME-0" --force --grace-period=0
 }
 
 # Set exit trap
