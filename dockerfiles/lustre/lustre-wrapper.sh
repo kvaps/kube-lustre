@@ -109,7 +109,7 @@ fi
 
 # Create mount target
 MOUNT_TARGET="$MOUNT_DIR/$POOL/$NAME"
-SYSTEMD_UNIT="$(echo $MOUNT_TARGET | cut -c2- | tr '/' '-').mount"
+SYSTEMD_UNIT="$(echo $MOUNT_TARGET | sed -e 's/-/\\x2d/g' -e 's/\//-/g' -e 's/^-//').mount"
 SYSTEMD_UNIT_FILE="$CHROOT/run/systemd/system/$SYSTEMD_UNIT"
 
 cleanup() {
@@ -164,7 +164,12 @@ Type=lustre
 EOT
 
 # Start daemon
-$SYSTEMCTL start "$SYSTEMD_UNIT" &
+if ! $SYSTEMCTL start "$SYSTEMD_UNIT"; then
+    # print error
+    $SYSTEMCTL status "$SYSTEMD_UNIT" | grep 'mount\[' | sed 's/^.*\]: //g' >&2
+    exit 1
+fi &
+
 MOUNT_PID=$!
 wait $MOUNT_PID
 
