@@ -1,5 +1,5 @@
 #!/bin/sh
-[ ! -z "$DEBUG" ] && set -x
+[ "$DEBUG" == "1" ] && set -x
 set -e
 
 # default parameters

@@ -1,5 +1,5 @@
 #!/bin/sh
-[ ! -z "$DEBUG" ] && set -x
+[ "$DEBUG" == "1" ] && set -x
 set -e
 
 for i in FSNAME DEVICE; do
@@ -118,14 +118,23 @@ mkdir -p "$CHROOT/$MOUNT_TARGET"
 cleanup() {
     set +e
 
+    # kill tail process if exist
     kill $TAILF_PID 2>/dev/null
+    # kill mount process if exist
     kill -SIGINT $MOUNT_PID 2>/dev/null && wait $MOUNT_PID
+    # kill zpool process if exist
     kill -SIGINT $ZPOOL_PID 2>/dev/null && wait $ZPOOL_PID
 
+    # umount lustre target if mounted
     $MOUNTPOINT -q "$MOUNT_TARGET" && $UMOUNT -f "$MOUNT_TARGET"
+    # export zpool if imported
     $ZPOOL list "$POOL" &>/dev/null && $ZPOOL export -f "$POOL"
+    # mark secondary if drbd backend
     [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
     rmdir "$MOUNT_TARGET" 2>/dev/null
+
+    # kill the pod for not wait when Terminating are finished
+    [ "$KUBE_NOTIFY" == "1" ] && kubectl delete pod "$RESOURCE_NAME" --force --grace-period=0
 }
 
 # Set exit trap

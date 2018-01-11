@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: ${APP_NAME}
-  namespace: lustre
   labels:
       app: ${APP_NAME}
 spec:
@@ -34,6 +33,10 @@ spec:
         securityContext:
           privileged: true
         env:
+        - name: KUBE_NOTIFY
+          value: "1"
+        - name: DEBUG
+          value: "0"
         - name: CHROOT
           value: "/host-root"
         - name: HA_BACKEND

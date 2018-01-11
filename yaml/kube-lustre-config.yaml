@@ -1,7 +1,7 @@
 kind: ConfigMap
 metadata:
   name: kube-lustre-config
-  namespace: kube-system
+  namespace: lustre
 apiVersion: v1
 data:
   configuration.json: |

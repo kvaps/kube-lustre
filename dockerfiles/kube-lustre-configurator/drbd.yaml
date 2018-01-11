@@ -2,7 +2,6 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: ${APP_NAME}-drbd
-  namespace: lustre
   labels:
       app: ${APP_NAME}-drbd
 spec:
@@ -33,6 +32,8 @@ spec:
         securityContext:
           privileged: true
         env:
+        - name: DEBUG
+          value: "0"
         - name: CHROOT
           value: "/host-root"
         - name: RESOURCE_NAME

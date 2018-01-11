@@ -2,7 +2,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: kube-lustre-configurator
-  namespace: kube-system
+  namespace: lustre
 spec:
   backoffLimit: 0
   template:
