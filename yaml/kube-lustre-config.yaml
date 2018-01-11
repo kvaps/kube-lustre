@@ -17,7 +17,7 @@ data:
           "install": true,
           "device": "/dev/drbd0",
           "port": "7788",
-          "disks": ["/dev/vdb", "/dev/vdb"],
+          "disks": ["/dev/vdb", "/dev/vdb"]
         }
       }
     }
