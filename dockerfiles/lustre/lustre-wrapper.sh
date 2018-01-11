@@ -123,16 +123,26 @@ cleanup() {
     kill -SIGINT $ZPOOL_PID 2>/dev/null && wait $ZPOOL_PID
 
     # umount lustre target if mounted
-    $SYSTEMCTL stop "$SYSTEMD_UNIT" && rm -f "$SYSTEMD_UNIT_FILE"
+    if $SYSTEMCTL is-active "$SYSTEMD_UNIT"; then
+        $SYSTEMCTL stop "$SYSTEMD_UNIT"
+    fi
+
+    rm -f "$SYSTEMD_UNIT_FILE"
 
     # export zpool if imported
-    $ZPOOL list "$POOL" &>/dev/null && $ZPOOL export -f "$POOL"
+    if $ZPOOL list "$POOL" &>/dev/null; then
+        $ZPOOL export -f "$POOL"
+    fi
+
     # mark secondary if drbd backend
     [ "$HA_BACKEND" == "drbd" ] && $DRBDADM secondary "$RESOURCE_NAME"
+
     rmdir "$MOUNT_TARGET" 2>/dev/null
 
     # kill the pod for not wait when Terminating are finished
     [ "$KUBE_NOTIFY" == "1" ] && kubectl delete pod "$RESOURCE_NAME-0" --force --grace-period=0
+
+    exit 0
 }
 
 # Set exit trap
@@ -164,6 +174,7 @@ Type=lustre
 EOT
 
 # Start daemon
+$SYSTEMCTL daemon-reload
 if ! $SYSTEMCTL start "$SYSTEMD_UNIT"; then
     # print error
     $SYSTEMCTL status "$SYSTEMD_UNIT" | grep 'mount\[' | sed 's/^.*\]: //g' >&2
