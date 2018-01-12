@@ -149,7 +149,6 @@ done
 for CONFIGURATION in $CONFIGURATIONS; do
 
     [ "$CONFIGURE_SERVERS" == "1" ] && DAEMONS="$(jq -r ".$CONFIGURATION | keys[]" "$DAEMONS_FILE")"
-    [ "$CONFIGURE_CLIENTS" == "1" ] && CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
 
     for DAEMON in $DAEMONS; do
 
@@ -179,19 +178,23 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
     done
 
-    for CLIENT in $CLIENTS; do
+
+    if [ "$CONFIGURE_CLIENTS" == "1" ]; then
+        CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
 
         load_variables
 
-        # label nodes
-        kubectl label node --overwrite "$NODE1_NAME" "$LUSTRE_FSNAME/client="
+        for CLIENT in $CLIENTS; do
+            # label nodes
+            kubectl label node --overwrite "$NODE1_NAME" "$LUSTRE_FSNAME/client="
+        done
 
-        # apply lustre resources
+        # apply lustre client
         if [ "$LUSTRE_INSTALL" == "true" ]; then
             eval "echo \"$(cat lustre-client.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
         elif [ "$LUSTRE_INSTALL" == "false" ]; then
             eval "echo \"$(cat lustre-client.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
         fi
+    fi
 
-    done
 done
