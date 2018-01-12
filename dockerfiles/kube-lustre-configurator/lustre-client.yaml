@@ -17,7 +17,7 @@ spec:
     spec:
       hostNetwork: true
       nodeSelector:
-        ${NODE_LABEL}: ""
+        ${LUSTRE_FSNAME}/client: ""
       initContainers:
       - name: lustre-install
         image: kvaps/lustre-install
