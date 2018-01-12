@@ -44,13 +44,19 @@ What each image does?
 ## Requirements
 
 * **Kubernetes:** >=1.9.1 version
-* **Servers:** Centos 7
-* **Clients:** Centos 7 (or installed `lustre` kernel-module)
+* **Servers:** Centos 7 with latest updates
+* **Clients:** Centos 7 with latest updates (or installed `lustre` kernel-module)
 * **Selinux**: disabled
 * **Hostnames**: Each node should reach each other by single hostname
 * **Fixed IPs**: Each node should have unchangeable IP-address
 
 You need to understand that all packages will installed directly on your node.
+
+## Limitations
+
+* Only ZFS Backend is supported.
+* Unmanaged `ldev.conf` file.
+* This is just concept please don't use it on production!
 
 ## Quick Start
 
