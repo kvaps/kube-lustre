@@ -99,6 +99,8 @@ Don't forget to enable node after it will able to run resources:
 kubectl uncordon <node>
 ```
 
-## License
+## License information
 
-Kube-lustre is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
+* Kube-lustre is under the Apache 2.0 license. (See the [LICENSE](LICENSE) file for details)
+* Lustre is under the GPL 2.0 license. (See [this page](http://lustre.org/development/) for details)
+* DRBD is under the GPL 2.0 license.
