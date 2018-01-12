@@ -180,7 +180,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
 
     if [ "$CONFIGURE_CLIENTS" == "1" ]; then
-        CLIENTS="$(jq -r ".$CONFIGURATION | keys[]" "$CLIENTS_FILE")"
+        CLIENTS="$(jq -r ".$CONFIGURATION[]" "$CLIENTS_FILE")"
 
         load_variables
 
