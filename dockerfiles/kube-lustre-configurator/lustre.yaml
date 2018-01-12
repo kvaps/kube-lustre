@@ -12,6 +12,8 @@ spec:
       name: ${APP_NAME}
   serviceName: ${APP_NAME}
   replicas: 1
+  updateStrategy:
+    type: OnDelete
   template:
     metadata:
       labels:
