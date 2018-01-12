@@ -1,8 +1,8 @@
-# kube-lustre
+# Kube-Lustre
 
-Lustre Filesystem for Kubernetes
+![](lustre-logo.png)
 
-## Build Status
+High-available Lustre filesystem concept with DRBD for Kubernetes.
 
 | Image                                 | Build Status                                                                 |
 |---------------------------------------|------------------------------------------------------------------------------|
