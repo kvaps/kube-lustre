@@ -186,7 +186,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
 
         for CLIENT in $CLIENTS; do
             # label nodes
-            kubectl label node --overwrite "$NODE1_NAME" "$LUSTRE_FSNAME/client="
+            kubectl label node --overwrite "$CLIENT" "$LUSTRE_FSNAME/client="
         done
 
         # apply lustre client
