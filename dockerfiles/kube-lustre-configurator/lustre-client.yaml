@@ -18,6 +18,10 @@ spec:
       hostNetwork: true
       nodeSelector:
         ${LUSTRE_FSNAME}/client: ""
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
       initContainers:
       - name: lustre-install
         image: kvaps/lustre-install
