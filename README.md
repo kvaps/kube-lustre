@@ -98,3 +98,7 @@ Don't forget to enable node after it will able to run resources:
 ```
 kubectl uncordon <node>
 ```
+
+## License
+
+Kube-lustre is under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
