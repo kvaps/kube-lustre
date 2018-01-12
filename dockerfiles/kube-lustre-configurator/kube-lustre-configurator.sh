@@ -23,6 +23,8 @@ load_variables() {
     DRBD_INSTALL="$(jq -r ".$CONFIGURATION.drbd.install" "$CONFIGURATIONS_FILE")"
     DRBD_DEVICE="$(jq -r ".$CONFIGURATION.drbd.device" "$CONFIGURATIONS_FILE")"
     DRBD_PORT="$(jq -r ".$CONFIGURATION.drbd.port" "$CONFIGURATIONS_FILE")"
+    DRBD_SYNCER_RATE="$(jq -r ".$CONFIGURATION.drbd.syncer_rate" "$CONFIGURATIONS_FILE")"
+    DRBD_PROTOCOL="$(jq -r ".$CONFIGURATION.drbd.protocol" "$CONFIGURATIONS_FILE")"
     DRBD_NODE1_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[0]" "$CONFIGURATIONS_FILE")"
     DRBD_NODE2_DISK="$(jq -r ".$CONFIGURATION.drbd.disks[1]" "$CONFIGURATIONS_FILE")"
     NODE_LABEL="$LUSTRE_FSNAME/$DAEMON"
@@ -163,10 +165,15 @@ for CONFIGURATION in $CONFIGURATIONS; do
         fi
 
         # apply drbd resources
-        if [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "true" ]; then
-            eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
-        elif [ "$DRBD" == "true" ] && [ "$DRBD_INSTALL" == "false" ]; then
-            eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+        if [ "$DRBD" == "true" ]; then
+            [ "$DRBD_SYNCER_RATE" == "null" ] && DRBD_SYNCER_RATE="5M"
+            [ "$DRBD_PROTOCOL" == "null" ] && DRBD_PROTOCOL="C"
+
+            if [ "$DRBD_INSTALL" == "true" ]; then
+                eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
+            else
+                eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+            fi
         fi
 
         # apply lustre resources

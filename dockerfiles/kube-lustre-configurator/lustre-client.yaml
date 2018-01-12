@@ -24,6 +24,8 @@ spec:
         env:
         - name: CHROOT
           value: "/host-root"
+        - name: DEBUG
+          value: "${LUSTRE_CLIENT_DEBUG:-0}"
         volumeMounts:
         - name: host-root
           mountPath: "/host-root"
@@ -34,7 +36,7 @@ spec:
           privileged: true
         env:
         - name: DEBUG
-          value: "0"
+          value: "${LUSTRE_CLIENT_DEBUG:-0}"
         - name: CHROOT
           value: "/host-root"
         - name: FSNAME

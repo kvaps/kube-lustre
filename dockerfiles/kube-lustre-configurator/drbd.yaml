@@ -27,6 +27,8 @@ spec:
         env:
         - name: CHROOT
           value: "/host-root"
+        - name: DEBUG
+          value: "${DRBD_DEBUG:-0}"
         volumeMounts:
         - name: host-root
           mountPath: "/host-root"
@@ -36,8 +38,12 @@ spec:
         securityContext:
           privileged: true
         env:
+        - name: PROTOCOL
+          value: "${DRBD_PROTOCOL}"
+        - name: SYNCER_RATE
+          value: "${DRBD_SYNCER_RATE}"
         - name: DEBUG
-          value: "0"
+          value: "${DRBD_DEBUG:-0}"
         - name: CHROOT
           value: "/host-root"
         - name: RESOURCE_NAME

@@ -15,8 +15,14 @@ spec:
         - name: CONFIGURE_SERVERS
           value: "1"
         - name: CONFIGURE_CLIENTS
-          value: "0"
+          value: "1"
         - name: DEBUG
+          value: "0"
+        - name: DRBD_DEBUG
+          value: "0"
+        - name: LUSTRE_DEBUG
+          value: "0"
+        - name: LUSTRE_CLIENT_DEBUG
           value: "0"
         volumeMounts:
         - name: config
