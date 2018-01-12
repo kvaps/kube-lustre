@@ -81,3 +81,20 @@ kubectl apply -f kube-lustre-config.yaml
 ```sh
 kubectl create -f https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-configurator.yaml
 ```
+
+## Usage
+
+After installation you will have one common filesystem mounted to same mountpoint on each node.
+
+You can use [`hostPath`](https://kubernetes.io/docs/concepts/storage/volumes/#hostpath) volumes for passthrough directories from lustre filesystem to your containers, or install special [hostpath provisioner](https://github.com/torchbox/k8s-hostpath-provisioner) for Kubernetes for automate volumes allocation process.
+
+---
+
+In case of ha-installation if you want to migrate lustre resources from one node to another one, you can use simple command for achieve this:
+```
+kubectl drain <node> --ignore-daemonsets
+```
+Don't forget to enable node after it will able to run resources:
+```
+kubectl uncordon <node>
+```
