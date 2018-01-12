@@ -71,6 +71,21 @@ kubectl create clusterrolebinding --user system:serviceaccount:lustre:default lu
 curl -O https://raw.githubusercontent.com/kvaps/kube-lustre/master/yaml/kube-lustre-config.yaml
 vim kube-lustre-config.yaml
 ```
+* In `configuration.json` you can specify configurations that will be identical for each part your daemons.
+
+    * Option `mountpoint` requires only for clients.
+    * You can remove drbd section, in this case server will be created without ha-pair.
+    * If you have more than one drbd-target per physical server, specify different `device`, `port`.
+    * Additional you can add `protocol` and `syncer_rate` options there.
+
+* In `daemons.json` you can specify four types of daemons, example:
+
+    * `mgs` - Managment server
+    * `mdt3` - Metadata target (index:3)
+    * `ost4` - Object storage target (index:4)
+    * `mdt0-mgs` - Metadata target (index:0) with managment server 
+  
+  Only one management server can be specified
 
 * Apply your config:
 ```sh
