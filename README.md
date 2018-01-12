@@ -50,6 +50,8 @@ What each image does?
 * **Hostnames**: Each node should reach each other by single hostname
 * **Fixed IPs**: Each node should have unchangeable IP-address
 
+You need to understand that all packages will installed directly on your node.
+
 ## Quick Start
 
 * Create namespace, and clusterrolebinding:
