@@ -20,6 +20,12 @@ High-available Lustre filesystem concept with DRBD for Kubernetes.
 [kvaps/drbd]: https://hub.docker.com/r/kvaps/drbd/builds/
 [kvaps/drbd-install]: https://hub.docker.com/r/kvaps/drbd-install/builds/
 
+## Concept
+
+All project represents a few simple docker-images with shell-scripts, each one do some does its specific task.
+Since lustre zfs and drbd work at the kernel level, which little bit does not fit into the docker's ideology, almost all actions executes directly on the host machine.
+Docker and Kubernetes used here only as orchestration-system and ha-management framework.
+
 ## Quick Start
 
 * Create namespace, and clusterrolebinding:
