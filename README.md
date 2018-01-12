@@ -41,6 +41,15 @@ What each image does?
 
 [config]: https://github.com/kvaps/kube-lustre/blob/master/yaml/kube-lustre-config.yaml
 
+## Requirements
+
+* **Kubernetes:** >=1.9.1 version
+* **Servers:** Centos 7
+* **Clients:** Centos 7 (or installed `lustre` kernel-module)
+* **Selinux**: disabled
+* **Hostnames**: Each node should reach each other by single hostname
+* **Fixed IPs**: Each node should have unchangeable IP-address
+
 ## Quick Start
 
 * Create namespace, and clusterrolebinding:
