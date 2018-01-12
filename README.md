@@ -103,4 +103,4 @@ kubectl uncordon <node>
 
 * Kube-lustre is under the Apache 2.0 license. (See the [LICENSE](LICENSE) file for details)
 * Lustre filesystem is under the GPL 2.0 license. (See [this page](http://lustre.org/development/) for details)
-* DRBD is under the GPL 2.0 license.
+* DRBD is under the GPL 2.0 license. (See [this file](https://github.com/LINBIT/drbd-8.4/blob/master/COPYING) for details)
