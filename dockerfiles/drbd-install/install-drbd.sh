@@ -32,8 +32,11 @@ PACKAGE_NAME="drbd"
 PACKAGE_VERSION="$VERSION"
 MAKE[0]="make -C drbd"
 BUILT_MODULE_NAME[0]=drbd
+BUILT_MODULE_NAME[1]=drbd_transport_tcp
 DEST_MODULE_LOCATION[0]=/kernel/drivers/block
+DEST_MODULE_LOCATION[1]=/kernel/drivers/block
 BUILT_MODULE_LOCATION[0]=drbd
+BUILT_MODULE_LOCATION[1]=drbd
 CLEAN="make -C drbd clean"
 AUTOINSTALL=yes
 EOF
