@@ -37,7 +37,7 @@ EOF
 install_dkms_module() {
     local MODULE="$1"
     local VERSION="$($RPM -q "$1-dkms" | sed "s/^$1-dkms-\([^-]\+\).*/\1/")"
-    $DKMS install "$MODULE/$VERSION"
+    $DKMS install "$MODULE/$VERSION" -k "$KERNEL_VERSION"
 }
 
 # if chroot is set, use yum and rpm from chroot
