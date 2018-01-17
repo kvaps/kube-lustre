@@ -35,7 +35,7 @@ install_drbd_dkms() {
         cat > "$CHROOT/usr/src/drbd-$VERSION/dkms.conf" << EOF
 PACKAGE_NAME="drbd"
 PACKAGE_VERSION="$VERSION"
-MAKE[0]="make -C drbd"
+MAKE[0]="make KVER=\${kernelver} KDIR=\${kernel_source_dir} -C drbd"
 BUILT_MODULE_NAME[0]=drbd
 DEST_MODULE_LOCATION[0]=/kernel/drivers/block
 BUILT_MODULE_LOCATION[0]=drbd
@@ -46,7 +46,7 @@ EOF
         $DKMS add "drbd/$VERSION"
     fi
 
-    $DKMS install "drbd/$VERSION"
+    $DKMS install "drbd/$VERSION" -k "$KERNEL_VERSION"
 }
 
 install_drbd_utils() {
