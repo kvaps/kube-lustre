@@ -172,7 +172,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
             if [ "$DRBD_INSTALL" == "true" ]; then
                 eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
             else
-                eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+                eval "echo \"$(cat drbd.yaml | sed 's/"/\\"/g' )\"" | sed '/^ *initContainers: *$/,/^ *containers: *$/{/^ *containers: *$/!d}' | kubectl apply -f -
             fi
         fi
 
@@ -180,7 +180,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
         if [ "$LUSTRE_INSTALL" == "true" ]; then
             eval "echo \"$(cat lustre.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
         elif [ "$LUSTRE_INSTALL" == "false" ]; then
-            eval "echo \"$(cat lustre.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+            eval "echo \"$(cat lustre.yaml | sed 's/"/\\"/g' )\"" | sed '/^ *initContainers: *$/,/^ *containers: *$/{/^ *containers: *$/!d}' | kubectl apply -f -
         fi
 
     done
@@ -200,7 +200,7 @@ for CONFIGURATION in $CONFIGURATIONS; do
         if [ "$LUSTRE_INSTALL" == "true" ]; then
             eval "echo \"$(cat lustre-client.yaml | sed 's/"/\\"/g' )\"" | kubectl apply -f -
         elif [ "$LUSTRE_INSTALL" == "false" ]; then
-            eval "echo \"$(cat lustre-client.yaml | sed 's/"/\\"/g' )\"" | sed -z 's/initContainers.*containers:/containers:/' | kubectl apply -f -
+            eval "echo \"$(cat lustre-client.yaml | sed 's/"/\\"/g' )\"" | sed '/^ *initContainers: *$/,/^ *containers: *$/{/^ *containers: *$/!d}' | kubectl apply -f -
         fi
     fi
 
