@@ -70,6 +70,8 @@ spec:
           value: "${DRBD_NODE2_DISK}"
         - name: NODE2_PORT
           value: "${DRBD_PORT}"
+        - name: FORCE_CREATE
+          value: "${DRBD_FORCE_CREATE:-0}"
         volumeMounts:
         - name: host-root
           mountPath: /host-root

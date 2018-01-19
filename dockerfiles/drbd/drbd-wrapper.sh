@@ -6,6 +6,7 @@ PROTOCOL=${PROTOCOL:-C}
 NODE1_METADISK=${NODE1_METADISK:-internal}
 NODE2_METADISK=${NODE1_METADISK:-internal}
 CREATION_TIMEOUT=${CREATION_TIMEOUT:-120}
+[ "$FORCE_CREATE" == "1" ] && FORCE_CREATE_CMD="--force"
 
 for i in RESOURCE_NAME DEVICE NODE1_DISK NODE1_IP NODE1_PORT DEVICE NODE2_DISK NODE2_IP NODE2_PORT NODE1_NAME NODE2_NAME; do
     if [ -z "$(eval "echo \"\$$i"\")" ]; then
@@ -49,7 +50,7 @@ mv "$CHROOT/tmp/$RESOURCE_NAME.res" "$CHROOT/etc/drbd.d/$RESOURCE_NAME.res"
 
 # Prepare drive
 if ! $WIPEFS "$NODE_DISK" | grep -q "."; then
-    $DRBDADM create-md "$RESOURCE_NAME" &&
+    $DRBDADM create-md $FORCE_CREATE_CMD "$RESOURCE_NAME" &&
     case "$HOSTNAME" in
         $NODE1_NAME )
             JUST_CREATED="$(echo yes | nc -w "$CREATION_TIMEOUT" -n -l -p "$NODE1_PORT" )"

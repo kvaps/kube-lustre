@@ -15,12 +15,16 @@ load_variables() {
     NODE2_IP="$(getent ahosts "$NODE2_NAME" | grep -v -m1 ':' | awk '{print $1}')"
     LUSTRE="$(jq -r ".$CONFIGURATION | keys | contains([\"lustre\"])" "$CONFIGURATIONS_FILE")"
     LUSTRE_FSNAME="$(jq -r ".$CONFIGURATION.lustre.fsname" "$CONFIGURATIONS_FILE")"
+    LUSTRE_DEBUG="$(jq -r ".$CONFIGURATION.lustre.debug" "$CONFIGURATIONS_FILE")"
     LUSTRE_INSTALL="$(jq -r ".$CONFIGURATION.lustre.install" "$CONFIGURATIONS_FILE")"
+    LUSTRE_FORCE_CREATE="$(jq -r ".$CONFIGURATION.lustre.force_create" "$CONFIGURATIONS_FILE")"
     LUSTRE_MGSNODE="$(jq -r ".$CONFIGURATION.lustre.mgsnode" "$CONFIGURATIONS_FILE")"
     LUSTRE_DEVICE="$(jq -r ".$CONFIGURATION.lustre.device" "$CONFIGURATIONS_FILE")"
     LUSTRE_MOUNTPOINT="$(jq -r ".$CONFIGURATION.lustre.mountpoint" "$CONFIGURATIONS_FILE")"
     DRBD="$(jq -r ".$CONFIGURATION | keys | contains([\"drbd\"])" "$CONFIGURATIONS_FILE")"
+    DRBD_DEBUG="$(jq -r ".$CONFIGURATION.drbd.debug" "$CONFIGURATIONS_FILE")"
     DRBD_INSTALL="$(jq -r ".$CONFIGURATION.drbd.install" "$CONFIGURATIONS_FILE")"
+    DRBD_FORCE_CREATE="$(jq -r ".$CONFIGURATION.drbd.force_create" "$CONFIGURATIONS_FILE")"
     DRBD_DEVICE="$(jq -r ".$CONFIGURATION.drbd.device" "$CONFIGURATIONS_FILE")"
     DRBD_PORT="$(jq -r ".$CONFIGURATION.drbd.port" "$CONFIGURATIONS_FILE")"
     DRBD_SYNCER_RATE="$(jq -r ".$CONFIGURATION.drbd.syncer_rate" "$CONFIGURATIONS_FILE")"
@@ -36,6 +40,11 @@ load_variables() {
         LUSTRE_HA_BACKEND="drbd"
         LUSTRE_SERVICENODE="${NODE1_NAME}:${NODE2_NAME}"
     fi
+
+    [ "$LUSTRE_DEBUG" == "true" ] && LSUTRE_DEBUG="1" || LUSTRE_DEBUG="0"
+    [ "$DRBD_DEBUG"   == "true" ] && DRBD_DEBUG="1"   || DRBD_DEBUG="0"
+    [ "$LUSTRE_FORCE_CREATE" == "true" ] && LSUTRE_FORCE_CREATE="1" || LUSTRE_FORCE_CREATE="0"
+    [ "$DRBD_FORCE_CREATE"   == "true" ] && DRBD_FORCE_CREATE="1"   || DRBD_FORCE_CREATE="0"
 }
 
 echo "Parsing $CONFIGURATIONS_FILE"
