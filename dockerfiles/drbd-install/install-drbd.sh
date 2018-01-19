@@ -5,7 +5,7 @@ set -e
 
 # default parameters
 [ -z "$KERNEL_VERSION" ] && KERNEL_VERSION="$(uname -r)"
-VERSION="8.4.10-1"
+VERSION="9.0.11-1"
 UTILS_VERSION="9.1.0-1"
 
 
@@ -25,20 +25,18 @@ install_drbd_dkms() {
     if ! $DKMS status -m drbd -v "$VERSION" | grep -q "."; then
 
         rm -rf "$CHROOT/usr/src/drbd-$VERSION"
-        $CURL "http://www.linbit.com/www.linbit.com/downloads/drbd/8.4/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
-        
-        PATCH_PATH="$PWD/add-RHEL74-compat-hack.patch"
-        cd "$CHROOT/usr/src/drbd-$VERSION" 
-        patch -p1 < "$PATCH_PATH"
-        cd -
+        $CURL "http://www.linbit.com/downloads/drbd/9.0/drbd-$VERSION.tar.gz" | tar -xzf - -C "$CHROOT/usr/src"
         
         cat > "$CHROOT/usr/src/drbd-$VERSION/dkms.conf" << EOF
 PACKAGE_NAME="drbd"
 PACKAGE_VERSION="$VERSION"
 MAKE[0]="make KVER=\${kernelver} KDIR=\${kernel_source_dir} -C drbd"
 BUILT_MODULE_NAME[0]=drbd
+BUILT_MODULE_NAME[1]=drbd_transport_tcp
 DEST_MODULE_LOCATION[0]=/kernel/drivers/block
+DEST_MODULE_LOCATION[1]=/kernel/drivers/block
 BUILT_MODULE_LOCATION[0]=drbd
+BUILT_MODULE_LOCATION[1]=drbd
 CLEAN="make -C drbd clean"
 AUTOINSTALL=yes
 EOF
@@ -50,7 +48,7 @@ EOF
 }
 
 install_drbd_utils() {
-    $YUM -y install "http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd84-utils-$UTILS_VERSION.el7.elrepo.x86_64.rpm"
+    $YUM -y install "http://elrepo.org/linux/elrepo/el7/x86_64/RPMS/drbd90-utils-$UTILS_VERSION.el7.elrepo.x86_64.rpm"
 }
 
 # if chroot is set, use yum and rpm from chroot
