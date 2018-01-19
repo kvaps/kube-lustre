@@ -10,6 +10,7 @@ for i in FSNAME DEVICE; do
 done
 
 MOUNT_DIR=${MOUNT_DIR:-/var/lib/lustre}
+[ "$FORCE_CREATE" == "1" ] && FORCE_CREATE_CMD="--force"
 
 case "$TYPE" in
     ost )
@@ -155,7 +156,7 @@ fi
 
 if ! $WIPEFS "$DEVICE" | grep -q "."; then
     # Prepare drive
-    $MKFS_LUSTRE $FSNAME_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs --force-nohostid "$POOL/$NAME" "$DEVICE"
+    $MKFS_LUSTRE $FSNAME_CMD $FORCE_CREATE_CMD $MGSNODE_CMD $SERVICENODE_CMD $INDEX_CMD $TYPE_CMD --backfstype=zfs --force-nohostid "$POOL/$NAME" "$DEVICE"
 else
     # Import zfs-pool
     if ! $ZPOOL list | grep -q "^$POOL "; then

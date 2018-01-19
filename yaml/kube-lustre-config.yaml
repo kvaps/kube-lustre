@@ -12,12 +12,16 @@ data:
           "mgsnode": "node1:node2",
           "fsname": "lustre1",
           "device": "/dev/drbd0",
+          "debug": false,
+          "force": false,
           "mountpoint": "/stor/lustre1"
         },
         "drbd": {
           "install": true,
           "device": "/dev/drbd0",
           "port": "7788",
+          "debug": false,
+          "force": false,
           "disks": ["/dev/vdb", "/dev/vdb"]
         }
       }

@@ -67,6 +67,8 @@ spec:
           value: "${LUSTRE_MGSNODE}"
         - name: SERVICENODE
           value: "${LUSTRE_SERVICENODE}"
+        - name: FORCE_CREATE
+          value: "${LUSTRE_FORCE_CREATE:-0}"
         volumeMounts:
         - name: host-root
           mountPath: /host-root
