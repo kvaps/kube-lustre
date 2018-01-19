@@ -5,9 +5,6 @@ resource ${RESOURCE_NAME} {
         after-sb-1pri call-pri-lost-after-sb;
         after-sb-2pri call-pri-lost-after-sb;
     }
-    syncer {
-        rate ${SYNCER_RATE};
-    }
     on ${NODE1_NAME}
     {
         device ${DEVICE};
