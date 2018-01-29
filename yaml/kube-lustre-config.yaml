@@ -13,7 +13,7 @@ data:
           "fsname": "lustre1",
           "device": "/dev/drbd0",
           "debug": false,
-          "force": false,
+          "force_create": false,
           "mountpoint": "/stor/lustre1"
         },
         "drbd": {
@@ -21,7 +21,7 @@ data:
           "device": "/dev/drbd0",
           "port": "7788",
           "debug": false,
-          "force": false,
+          "force_create": false,
           "disks": ["/dev/vdb", "/dev/vdb"]
         }
       }
