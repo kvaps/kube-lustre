@@ -14,7 +14,7 @@ High-available Lustre filesystem concept with DRBD for Kubernetes.
 | **[kvaps/drbd-install]**              | ![](https://img.shields.io/docker/build/kvaps/drbd-install.svg)              |
 
 [kvaps/kube-lustre-configurator]: https://hub.docker.com/r/kvaps/kube-lustre-configurator/builds/
-[kvaps/lustre]: https://hub.docker.com/r/kvaps/kvaps/lustre/builds/
+[kvaps/lustre]: https://hub.docker.com/r/kvaps/lustre/builds/
 [kvaps/lustre-client]: https://hub.docker.com/r/kvaps/lustre-client/builds/
 [kvaps/lustre-install]: https://hub.docker.com/r/kvaps/lustre-install/builds/
 [kvaps/drbd]: https://hub.docker.com/r/kvaps/drbd/builds/
