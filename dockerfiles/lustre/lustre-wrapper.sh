@@ -19,7 +19,7 @@ case "$TYPE" in
         NAME="${NAME:-ost${INDEX}}"
     ;;
     mdt )
-        TYPE_CMD="--mgt"
+        TYPE_CMD="--mdt"
         POOL="${POOL:-$FSNAME-mdt${INDEX}}"
         NAME="${NAME:-mdt${INDEX}}"
     ;;
@@ -114,6 +114,7 @@ SYSTEMD_UNIT="$(echo $MOUNT_TARGET | sed -e 's/-/\\x2d/g' -e 's/\//-/g' -e 's/^-
 SYSTEMD_UNIT_FILE="$CHROOT/run/systemd/system/$SYSTEMD_UNIT"
 
 cleanup() {
+    [ "$?" != "0" ] && KUBE_NOTIFY=0
     set +e
 
     # kill tail process if exist
