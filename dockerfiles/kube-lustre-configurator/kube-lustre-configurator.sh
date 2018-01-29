@@ -41,9 +41,9 @@ load_variables() {
         LUSTRE_SERVICENODE="${NODE1_NAME}:${NODE2_NAME}"
     fi
 
-    [ "$LUSTRE_DEBUG" == "true" ] && LSUTRE_DEBUG="1" || LUSTRE_DEBUG="0"
+    [ "$LUSTRE_DEBUG" == "true" ] && LUSTRE_DEBUG="1" || LUSTRE_DEBUG="0"
     [ "$DRBD_DEBUG"   == "true" ] && DRBD_DEBUG="1"   || DRBD_DEBUG="0"
-    [ "$LUSTRE_FORCE_CREATE" == "true" ] && LSUTRE_FORCE_CREATE="1" || LUSTRE_FORCE_CREATE="0"
+    [ "$LUSTRE_FORCE_CREATE" == "true" ] && LUSTRE_FORCE_CREATE="1" || LUSTRE_FORCE_CREATE="0"
     [ "$DRBD_FORCE_CREATE"   == "true" ] && DRBD_FORCE_CREATE="1"   || DRBD_FORCE_CREATE="0"
 }
 
