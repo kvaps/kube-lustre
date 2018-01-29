@@ -58,7 +58,7 @@ if [ "$TYPE" != "mgs" ]; then
     fi
 fi
 
-if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mgs" ] ); then
+if ( [ "$TYPE" == "ost" ] || [ "$TYPE" == "mdt" ] ); then
     if [ -z "$MGSNODE" ]; then
         >&2 echo "Error: variable MGSNODE is not specified, example:"
         >&2 echo "       MGSNODE=\"10.28.38.11@tcp,10.28.38.12@tcp\""
